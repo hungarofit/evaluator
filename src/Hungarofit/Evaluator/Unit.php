@@ -19,7 +19,17 @@ class Unit extends Enum
 
     public function isAscending()
     {
-        switch ($this->getValue()) {
+        return self::isAscendingValue($this->getValue());
+    }
+
+    public function isDescending()
+    {
+        return !$this->isAscending();
+    }
+
+    public function isAscendingValue($value)
+    {
+        switch ($value) {
             case self::MILE:
             case self::KILOMETER:
             case self::METER:
@@ -33,8 +43,8 @@ class Unit extends Enum
         }
     }
 
-    public function isDescending()
+    public function isDescendingValue($value)
     {
-        return !$this->isAscending();
+        return !self::isAscendingValue($value);
     }
 }
