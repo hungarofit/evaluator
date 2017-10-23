@@ -27,23 +27,23 @@ class Unit extends Enum
         return !$this->isAscending();
     }
 
-    public function isAscendingValue($value)
+    public static function isAscendingValue($value)
     {
         switch ($value) {
             case self::MILE:
             case self::KILOMETER:
             case self::METER:
-                return false;
+            case self::COUNT:
+                return true;
                 break;
             default:
             case self::MINUTE:
-            case self::COUNT:
-                return true;
+                return false;
                 break;
         }
     }
 
-    public function isDescendingValue($value)
+    public static function isDescendingValue($value)
     {
         return !self::isAscendingValue($value);
     }
