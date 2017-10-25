@@ -163,9 +163,10 @@ foreach($xlsIterator as $xlsPath) {
                 if(floatval($result) <= 0) {
                     continue;
                 }
-                $genderTable["$ages[$ri]"]["$points"] = ''.round($result, 2);
+                $genderTable[$ages[$ri]]["$points"] = ''.round($result, 2);
             }
         }
+        ksort($genderTable, SORT_NUMERIC);
 
         // Lookup expects data in descending order
         $genderTable = array_reverse($genderTable, true);
