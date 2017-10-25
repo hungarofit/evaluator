@@ -5,7 +5,7 @@ namespace Hungarofit\Evaluator\Lookup;
 
 use Hungarofit\Evaluator\Lookup;
 
-class AerobRun1mile5 extends Lookup
+final class AerobRun1mile5 extends Lookup
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = 'mile';

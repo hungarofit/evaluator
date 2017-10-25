@@ -5,7 +5,7 @@ namespace Hungarofit\Evaluator\Lookup;
 
 use Hungarofit\Evaluator\Lookup;
 
-class Motor4Situp extends Lookup
+final class Motor4Situp extends Lookup
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = 'n';

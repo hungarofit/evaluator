@@ -47,7 +47,7 @@ namespace '.CLASS_NS.';
 
 use '.CLASS_NS.';
 
-class '.$className.' extends Lookup
+final class '.$className.' extends Lookup
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = \''.$dUnit.'\';
