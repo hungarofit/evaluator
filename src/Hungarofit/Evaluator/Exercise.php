@@ -3,6 +3,7 @@
 namespace Hungarofit\Evaluator;
 
 
+use ReflectionClass;
 use RuntimeException;
 use InvalidArgumentException;
 
@@ -22,6 +23,12 @@ class Exercise implements ExerciseInterface
     {
         if(!class_exists($lookupClass)) {
             throw new InvalidArgumentException('No such Lookup class: '.$lookupClass);
+        }
+        $constants = (new ReflectionClass($lookupClass))->getConstants();
+        foreach(['TABLE','UNIT_EXERCISE','UNIT_RESULT'] as $c) {
+            if(!array_key_exists($c, $constants)) {
+                throw new InvalidArgumentException('Lookup class ('.$lookupClass.') must declare constant: '.$c);
+            }
         }
         $this->_lookupClass = $lookupClass;
 
@@ -118,6 +125,7 @@ class Exercise implements ExerciseInterface
         if($result <= 0) {
             throw new InvalidArgumentException('Invalid result: '.$result);
         }
+        $ascending = $this->getResultUnit()->isAscending();
         $lu = $this->_lookupClass;
         $table = $lu::TABLE[$gender->getValue()];
         $points = 0;
@@ -130,8 +138,17 @@ class Exercise implements ExerciseInterface
             $ageFound = true;
             foreach($row as $p => $r) {
                 $r = floatval($r);
-                if($result < $r) {
-                    continue;
+                if($ascending) {
+                    // array is reversed!
+                    if($result < $r) {
+                        continue;
+                    }
+                }
+                else {
+                    // array is reversed!
+                    if($result > $r) {
+                        continue;
+                    }
                 }
                 $points = floatval($p);
                 break;
