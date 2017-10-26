@@ -36,10 +36,11 @@ class Unit extends Enum
             case self::COUNT:
                 return true;
                 break;
-            default:
             case self::MINUTE:
                 return false;
                 break;
+            default:
+                throw new \InvalidArgumentException('Invalid Unit value: '.$value);
         }
     }
 

@@ -10,6 +10,7 @@ class TextTest extends TestCase
         return [
             ['aerob-run-12km', 'AerobRun12km'],
             ['aerob-run-1mile5', 'AerobRun1mile5'],
+            ['motor6-torso', 'Motor6Torso'],
         ];
     }
 
