@@ -3,15 +3,16 @@
 namespace Hungarofit\Evaluator\Lookup;
 
 
+use Hungarofit\Evaluator\Unit;
 use Hungarofit\Evaluator\Lookup;
 
 final class AerobRun1mile extends Lookup
 {
     /** Unit of exercise */
-    const UNIT_EXERCISE = 'mile';
+    const UNIT_EXERCISE = Unit::MILE;
     
     /** Unit of result */
-    const UNIT_RESULT = 'min';
+    const UNIT_RESULT = Unit::MINUTE;
     
     /** Lookup table */
     const TABLE = [

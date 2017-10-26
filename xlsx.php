@@ -6,7 +6,8 @@
 define('XLS_SHEET_FEMALE', 'lányok');
 define('XLS_SHEET_MALE', 'fiúk');
 define('XLS_SHEET_SOURCE', __DIR__ . '/xlsx');
-define('CLASS_NS', 'Hungarofit\Evaluator\Lookup');
+define('ROOT_NS', 'Hungarofit\Evaluator');
+define('CLASS_NS', ROOT_NS . '\Lookup');
 define('CLASS_SOURCE', __DIR__ . '/src/Hungarofit/Evaluator/Lookup');
 
 require_once __DIR__ . '/vendor/autoload.php';
@@ -45,15 +46,16 @@ function generateSource($className, $dUnit, $rUnit, $table) {
 namespace '.CLASS_NS.';
 
 
+use '.ROOT_NS.'\Unit;
 use '.CLASS_NS.';
 
 final class '.$className.' extends Lookup
 {
     /** Unit of exercise */
-    const UNIT_EXERCISE = \''.$dUnit.'\';
+    const UNIT_EXERCISE = Unit::'.\Hungarofit\Evaluator\Unit::fromValue($dUnit)->getName().';
     
     /** Unit of result */
-    const UNIT_RESULT = \''.$rUnit.'\';
+    const UNIT_RESULT = Unit::'.\Hungarofit\Evaluator\Unit::fromValue($rUnit)->getName().';
     
     /** Lookup table */
     const TABLE = '.$tbl.';

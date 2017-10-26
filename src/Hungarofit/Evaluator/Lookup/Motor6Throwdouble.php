@@ -3,15 +3,16 @@
 namespace Hungarofit\Evaluator\Lookup;
 
 
+use Hungarofit\Evaluator\Unit;
 use Hungarofit\Evaluator\Lookup;
 
 final class Motor6Throwdouble extends Lookup
 {
     /** Unit of exercise */
-    const UNIT_EXERCISE = 'n';
+    const UNIT_EXERCISE = Unit::COUNT;
     
     /** Unit of result */
-    const UNIT_RESULT = 'm';
+    const UNIT_RESULT = Unit::METER;
     
     /** Lookup table */
     const TABLE = [
