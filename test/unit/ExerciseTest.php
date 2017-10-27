@@ -120,28 +120,23 @@ final class SecondExercise1km extends Exercise
 
 class ExerciseTest extends TestCase
 {
-    /** @var Exercise */
-    static protected $first, $second;
-
     static function setUpBeforeClass()
     {
-        self::$first = FirstExercise12min::get();
-        self::$second = FirstExercise12min::get();
     }
 
     function provideNameData()
     {
         return [
-            [self::$first, 'first-exercise-12min'],
-            [self::$second, 'second-exercise-1km'],
+            [FirstExercise12min::get(), 'first-exercise-12min'],
+            [SecondExercise1km::get(), 'second-exercise-1km'],
         ];
     }
 
     function provideUnitData()
     {
         return [
-            [self::$first, Unit::MINUTE, Unit::METER, false, true],
-            [self::$second, Unit::KILOMETER, Unit::MINUTE, true, false],
+            [FirstExercise12min::get(), Unit::MINUTE, Unit::METER, false, true],
+            [SecondExercise1km::get(), Unit::KILOMETER, Unit::MINUTE, true, false],
         ];
     }
 
@@ -221,15 +216,15 @@ class ExerciseTest extends TestCase
      */
     public function testEvaluate($points, Gender $gender, $age, $result)
     {
-        $this->assertEquals($points, self::$first->evaluate($gender, $age, $result));
+        $this->assertEquals($points, FirstExercise12min::get()->evaluate($gender, $age, $result));
     }
 
     public function testLimit()
     {
-        $this->assertEquals(1, self::$first->getMinPoints(Gender::MALE(), 12));
-        $this->assertEquals(10.1, self::$first->getMinResult(Gender::MALE(), 12));
-        $this->assertEquals(150, self::$second->getMinResult(Gender::MALE(), 12));
-        $this->assertEquals(50, self::$second->getMinResult(Gender::FEMALE(), 12));
+        $this->assertEquals(1, FirstExercise12min::get()->getMinPoints(Gender::MALE(), 12));
+        $this->assertEquals(10.1, FirstExercise12min::get()->getMinResult(Gender::MALE(), 12));
+        $this->assertEquals(150, SecondExercise1km::get()->getMinResult(Gender::MALE(), 12));
+        $this->assertEquals(50, SecondExercise1km::get()->getMinResult(Gender::FEMALE(), 12));
     }
 
 

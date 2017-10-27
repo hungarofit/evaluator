@@ -13,8 +13,8 @@ class Exercise implements ExerciseInterface
     const UNIT_RESULT = '';
     const TABLE = [];
 
-    /** @var static */
-    static protected $_instance;
+    /** @var static[] */
+    static protected $_instances = [];
 
     /**
      * @return static
@@ -22,16 +22,17 @@ class Exercise implements ExerciseInterface
      */
     static public function get()
     {
-        $constants = (new ReflectionClass(static::class))->getConstants();
+        $class = get_called_class();
+        $constants = (new ReflectionClass($class))->getConstants();
         foreach(['TABLE','UNIT_EXERCISE','UNIT_RESULT'] as $c) {
             if(!array_key_exists($c, $constants)) {
-                throw new InvalidArgumentException('Exercise class ('.static::class.') must declare constant: '.$c);
+                throw new InvalidArgumentException('Exercise class ('.$class.') must declare constant: '.$c);
             }
         }
-        if(!static::$_instance) {
-            self::$_instance = new self;
+        if(!array_key_exists($class, self::$_instances)) {
+            self::$_instances[$class] = new $class();
         }
-        return self::$_instance;
+        return self::$_instances[$class];
     }
 
     /** @var string */
@@ -41,8 +42,6 @@ class Exercise implements ExerciseInterface
     /** @var Unit */
     private $_resultUnit;
 
-    /** @var string */
-    protected $_lookupClass;
 
     protected function __construct()
     {
@@ -81,7 +80,7 @@ class Exercise implements ExerciseInterface
         if(!$gender) {
             $gender = Gender::FEMALE();
         }
-        $table = self::TABLE[$gender->getValue()];
+        $table = static::TABLE[$gender->getValue()];
         end($table);
         $a = key($table);
         if($a === null) {
@@ -100,7 +99,7 @@ class Exercise implements ExerciseInterface
         if($age < 1) {
             throw new InvalidArgumentException('Invalid age: '.$age);
         }
-        $table = self::TABLE[$gender->getValue()];
+        $table = static::TABLE[$gender->getValue()];
         foreach($table as $a => $v) {
             $a = intval($a);
             if($age < $a) {
@@ -121,7 +120,7 @@ class Exercise implements ExerciseInterface
         if($age < 1) {
             throw new InvalidArgumentException('Invalid age: '.$age);
         }
-        $table = self::TABLE[$gender->getValue()];
+        $table = static::TABLE[$gender->getValue()];
         foreach($table as $a => $v) {
             $a = intval($a);
             if($age < $a) {
@@ -150,7 +149,7 @@ class Exercise implements ExerciseInterface
             throw new InvalidArgumentException('Invalid result: '.$result);
         }
         $ascending = $this->getResultUnit()->isAscending();
-        $table = self::TABLE[$gender->getValue()];
+        $table = static::TABLE[$gender->getValue()];
         $points = 0;
         $ageFound = false;
         foreach($table as $a => $row) {
