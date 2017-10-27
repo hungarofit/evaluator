@@ -1,12 +1,12 @@
 <?php
 
-namespace Hungarofit\Evaluator\Lookup;
+namespace Hungarofit\Evaluator\Exercise;
 
 
 use Hungarofit\Evaluator\Unit;
-use Hungarofit\Evaluator\Lookup;
+use Hungarofit\Evaluator\Exercise;
 
-final class AerobSwim500m extends Lookup
+final class AerobSwim500m extends Exercise
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = Unit::METER;

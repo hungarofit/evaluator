@@ -1,12 +1,12 @@
 <?php
 
-namespace Hungarofit\Evaluator\Lookup;
+namespace Hungarofit\Evaluator\Exercise;
 
 
 use Hungarofit\Evaluator\Unit;
-use Hungarofit\Evaluator\Lookup;
+use Hungarofit\Evaluator\Exercise;
 
-final class AerobRun12min extends Lookup
+final class AerobRun12min extends Exercise
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = Unit::MINUTE;

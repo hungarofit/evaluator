@@ -9,37 +9,48 @@ use InvalidArgumentException;
 
 class Exercise implements ExerciseInterface
 {
-    private $_name;
-    private $_exerciseUnit;
-    private $_resultUnit;
-    protected $_lookupClass;
+    const UNIT_EXERCISE = '';
+    const UNIT_RESULT = '';
+    const TABLE = [];
 
-    public function __construct($lookupClass)
-    {
-        $this->setLookupClass($lookupClass);
-    }
+    /** @var static */
+    static protected $_instance;
 
-    public function setLookupClass($lookupClass)
+    /**
+     * @return static
+     * @throws InvalidArgumentException
+     */
+    static public function get()
     {
-        if(!class_exists($lookupClass)) {
-            throw new InvalidArgumentException('No such Lookup class: '.$lookupClass);
-        }
-        $constants = (new ReflectionClass($lookupClass))->getConstants();
+        $constants = (new ReflectionClass(static::class))->getConstants();
         foreach(['TABLE','UNIT_EXERCISE','UNIT_RESULT'] as $c) {
             if(!array_key_exists($c, $constants)) {
-                throw new InvalidArgumentException('Lookup class ('.$lookupClass.') must declare constant: '.$c);
+                throw new InvalidArgumentException('Exercise class ('.static::class.') must declare constant: '.$c);
             }
         }
-        $this->_lookupClass = $lookupClass;
+        if(!static::$_instance) {
+            self::$_instance = new self;
+        }
+        return self::$_instance;
+    }
 
-        $nameSplit = explode('\\', $lookupClass);
+    /** @var string */
+    private $_name;
+    /** @var Unit */
+    private $_exerciseUnit;
+    /** @var Unit */
+    private $_resultUnit;
+
+    /** @var string */
+    protected $_lookupClass;
+
+    protected function __construct()
+    {
+        $nameSplit = explode('\\', static::class);
         $nameClass = array_pop($nameSplit);
         $this->_name = Text::kebabcase($nameClass);
-
-        $this->_exerciseUnit = Unit::fromValue($lookupClass::UNIT_EXERCISE);
-        $this->_resultUnit = Unit::fromValue($lookupClass::UNIT_RESULT);
-
-        return $this;
+        $this->_exerciseUnit = Unit::fromValue(static::UNIT_EXERCISE);
+        $this->_resultUnit = Unit::fromValue(static::UNIT_RESULT);
     }
 
     /**
@@ -60,11 +71,6 @@ class Exercise implements ExerciseInterface
         return $this->_resultUnit;
     }
 
-    function getLookupClass()
-    {
-        return $this->_lookupClass;
-    }
-
     /**
      * @inheritdoc
      * @throws RuntimeException
@@ -75,8 +81,7 @@ class Exercise implements ExerciseInterface
         if(!$gender) {
             $gender = Gender::FEMALE();
         }
-        $lu = $this->_lookupClass;
-        $table = $lu::TABLE[$gender->getValue()];
+        $table = self::TABLE[$gender->getValue()];
         end($table);
         $a = key($table);
         if($a === null) {
@@ -84,7 +89,6 @@ class Exercise implements ExerciseInterface
         }
         return intval($a);
     }
-
 
     /**
      * @inheritdoc
@@ -96,8 +100,28 @@ class Exercise implements ExerciseInterface
         if($age < 1) {
             throw new InvalidArgumentException('Invalid age: '.$age);
         }
-        $lu = $this->_lookupClass;
-        $table = $lu::TABLE[$gender->getValue()];
+        $table = self::TABLE[$gender->getValue()];
+        foreach($table as $a => $v) {
+            $a = intval($a);
+            if($age < $a) {
+                continue;
+            }
+            return floatval(array_pop($v));
+        }
+        throw new RuntimeException('Failed to find rows for age: '.$age);
+    }
+
+    /**
+     * @inheritdoc
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
+     */
+    function getMinPoints(Gender $gender, $age)
+    {
+        if($age < 1) {
+            throw new InvalidArgumentException('Invalid age: '.$age);
+        }
+        $table = self::TABLE[$gender->getValue()];
         foreach($table as $a => $v) {
             $a = intval($a);
             if($age < $a) {
@@ -126,8 +150,7 @@ class Exercise implements ExerciseInterface
             throw new InvalidArgumentException('Invalid result: '.$result);
         }
         $ascending = $this->getResultUnit()->isAscending();
-        $lu = $this->_lookupClass;
-        $table = $lu::TABLE[$gender->getValue()];
+        $table = self::TABLE[$gender->getValue()];
         $points = 0;
         $ageFound = false;
         foreach($table as $a => $row) {

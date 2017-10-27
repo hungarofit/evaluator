@@ -7,8 +7,9 @@ define('XLS_SHEET_FEMALE', 'lányok');
 define('XLS_SHEET_MALE', 'fiúk');
 define('XLS_SHEET_SOURCE', __DIR__ . '/xlsx');
 define('ROOT_NS', 'Hungarofit\Evaluator');
-define('CLASS_NS', ROOT_NS . '\Lookup');
-define('CLASS_SOURCE', __DIR__ . '/src/Hungarofit/Evaluator/Lookup');
+define('CLASS_NAME', 'Exercise');
+define('CLASS_NS', ROOT_NS . '\\' . CLASS_NAME);
+define('CLASS_SOURCE', __DIR__ . '/src/Hungarofit/Evaluator/' . CLASS_NAME);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -49,7 +50,7 @@ namespace '.CLASS_NS.';
 use '.ROOT_NS.'\Unit;
 use '.CLASS_NS.';
 
-final class '.$className.' extends Lookup
+final class '.$className.' extends '.CLASS_NAME.'
 {
     /** Unit of exercise */
     const UNIT_EXERCISE = Unit::'.\Hungarofit\Evaluator\Unit::fromValue($dUnit)->getName().';
@@ -64,9 +65,13 @@ final class '.$className.' extends Lookup
 }
 
 
-$SRC_PATH = realpath(__DIR__ . '/src/Hungarofit/Evaluator/Lookup') . DIRECTORY_SEPARATOR;
+$SRC_PATH = realpath(
+    __DIR__ . DIRECTORY_SEPARATOR .
+    'src' . DIRECTORY_SEPARATOR .
+    str_replace('\\', DIRECTORY_SEPARATOR, CLASS_NS)) . DIRECTORY_SEPARATOR
+;
 
-$xlsIterator = new \DirectoryIterator(__DIR__ . '/xlsx/');
+$xlsIterator = new \DirectoryIterator(__DIR__ . DIRECTORY_SEPARATOR . 'xlsx');
 foreach($xlsIterator as $xlsPath) {
     if($xlsPath->getExtension() !== 'xlsx') {
         continue;
