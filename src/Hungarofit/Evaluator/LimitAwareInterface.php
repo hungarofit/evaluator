@@ -17,4 +17,11 @@ interface LimitAwareInterface
      * @return float
      */
     function getMinResult(Gender $gender, $age);
+
+    /**
+     * @param Gender $gender
+     * @param int $age
+     * @return float
+     */
+    function getMinPoints(Gender $gender, $age);
 }

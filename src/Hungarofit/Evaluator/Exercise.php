@@ -37,6 +37,8 @@ class Exercise implements ExerciseInterface
 
     /** @var string */
     private $_name;
+    /** @var string */
+    private $_key;
     /** @var Unit */
     private $_exerciseUnit;
     /** @var Unit */
@@ -45,19 +47,38 @@ class Exercise implements ExerciseInterface
 
     protected function __construct()
     {
-        $nameSplit = explode('\\', static::class);
-        $nameClass = array_pop($nameSplit);
-        $this->_name = Text::kebabcase($nameClass);
+        $class = get_called_class();
+        $split = explode('\\', $class);
+        $className = array_pop($split);
+        $this->_name = Text::kebabcase($className);
+        $key = explode('-', $this->_name);
+        switch($key[0]) {
+            case 'motor3':
+            case 'motor4':
+            case 'motor6':
+                $this->_key = $key[1];
+                break;
+            default:
+                $this->_key = $this->_name;
+        }
         $this->_exerciseUnit = Unit::fromValue(static::UNIT_EXERCISE);
         $this->_resultUnit = Unit::fromValue(static::UNIT_RESULT);
     }
 
-    /**
-     * @return string
-     */
+    function isAerob()
+    {
+        return substr($this->getKey(), 0, 6) === 'aerob-';
+    }
+
+
     public function getName()
     {
         return $this->_name;
+    }
+
+    public function getKey()
+    {
+        return $this->_key;
     }
 
     public function getExerciseUnit()
@@ -145,7 +166,7 @@ class Exercise implements ExerciseInterface
         if($age < 1) {
             throw new InvalidArgumentException('Invalid age: '.$age);
         }
-        if($result <= 0) {
+        if($result < 0) {
             throw new InvalidArgumentException('Invalid result: '.$result);
         }
         $ascending = $this->getResultUnit()->isAscending();

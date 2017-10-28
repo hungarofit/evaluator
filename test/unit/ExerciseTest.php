@@ -3,182 +3,78 @@
 use PHPUnit\Framework\TestCase;
 use Hungarofit\Evaluator\Gender;
 use Hungarofit\Evaluator\Unit;
-use Hungarofit\Evaluator\Exercise;
+use Hungarofit\Evaluator\ExerciseInterface;
 use Hungarofit\Evaluator\Exercise\AerobBike12min;
-
-final class FirstExercise12min extends Exercise
-{
-    const UNIT_EXERCISE = Unit::MINUTE;
-    const UNIT_RESULT = Unit::METER;
-    const TABLE = [
-        'f' => [
-            '20' => [
-                '5' => 65.5,
-                '4' => 55.4,
-                '3' => 45.3,
-                '2' => 35.2,
-                '1' => 25.1,
-            ],
-            '15' => [
-                '5' => 55.5,
-                '4' => 45.4,
-                '3' => 35.3,
-                '2' => 25.2,
-                '1' => 15.1,
-            ],
-            '10' => [
-                '5' => 50.5,
-                '4' => 40.4,
-                '3' => 30.3,
-                '2' => 20.2,
-                '1' => 10.1,
-            ],
-        ],
-        'm' => [
-            '20' => [
-                '5' => 65.5,
-                '4' => 55.4,
-                '3' => 45.3,
-                '2' => 35.2,
-                '1' => 25.1,
-            ],
-            '15' => [
-                '5' => 55.5,
-                '4' => 45.4,
-                '3' => 35.3,
-                '2' => 25.2,
-                '1' => 15.1,
-            ],
-            '10' => [
-                '5' => 50.5,
-                '4' => 40.4,
-                '3' => 30.3,
-                '2' => 20.2,
-                '1' => 10.1,
-            ],
-        ],
-    ];
-}
-
-final class SecondExercise1km extends Exercise
-{
-    const UNIT_EXERCISE = Unit::KILOMETER;
-    const UNIT_RESULT = Unit::MINUTE;
-    const TABLE = [
-        'f' => [
-            '20' => [
-                '5' => 25,
-                '4.5' => 30,
-                '4' => 35,
-                '3.5' => 40,
-                '3' => 45,
-                '2.5' => 50,
-                '2' => 55,
-                '1.5' => 60,
-                '1' => 65,
-            ],
-            '10' => [
-                '5' => 10,
-                '4.5' => 15,
-                '4' => 20,
-                '3.5' => 25,
-                '3' => 30,
-                '2.5' => 35,
-                '2' => 40,
-                '1.5' => 45,
-                '1' => 50,
-            ],
-        ],
-        'm' => [
-            '20' => [
-                '5' => 125,
-                '4.5' => 130,
-                '4' => 135,
-                '3.5' => 140,
-                '3' => 145,
-                '2.5' => 150,
-                '2' => 155,
-                '1.5' => 160,
-                '1' => 165,
-            ],
-            '10' => [
-                '5' => 110,
-                '4.5' => 115,
-                '4' => 120,
-                '3.5' => 125,
-                '3' => 130,
-                '2.5' => 135,
-                '2' => 140,
-                '1.5' => 145,
-                '1' => 150,
-            ],
-        ],
-    ];
-}
-
+use Hungarofit\Evaluator\Exercise\AerobRun3km;
+use Hungarofit\Evaluator\Exercise\Motor4Situp;
 
 
 class ExerciseTest extends TestCase
 {
-    static function setUpBeforeClass()
+    public function testSingleton()
     {
+        $a1 = AerobBike12min::get();
+        $a2 = AerobBike12min::get();
+        $b = AerobRun3km::get();
+        $this->assertTrue($a1 instanceof ExerciseInterface);
+        $this->assertTrue($a2 instanceof ExerciseInterface);
+        $this->assertTrue($b instanceof ExerciseInterface);
+        $this->assertEquals($a1, $a2);
+        $this->assertNotEquals($a1, $b);
+    }
+
+    public function testLimit()
+    {
+        $this->assertEquals(1, AerobBike12min::get()->getMinPoints(Gender::MALE(), 13));
+        $this->assertEquals(1, AerobRun3km::get()->getMinPoints(Gender::MALE(), 8));
+        $this->assertEquals(3850, AerobBike12min::get()->getMinResult(Gender::MALE(), 13));
+        $this->assertEquals(28.34, AerobRun3km::get()->getMinResult(Gender::MALE(), 8));
+    }
+
+
+    public function testAgeArgument()
+    {
+        $exercise = AerobBike12min::get();
+        $this->expectException(InvalidArgumentException::class);
+        $exercise->evaluate(Gender::FEMALE(), 0, -1);
+        $this->expectException(InvalidArgumentException::class);
+    }
+
+    public function testResultArgument()
+    {
+        $exercise = AerobBike12min::get();
+        $this->expectException(InvalidArgumentException::class);
+        $exercise->evaluate(Gender::FEMALE(), 1, -1);
+    }
+
+    public function testMinResultArgument()
+    {
+        $exercise = AerobBike12min::get();
+        $this->expectException(InvalidArgumentException::class);
+        $exercise->getMinResult(Gender::FEMALE(), 0);
+    }
+
+    public function testMinKeys()
+    {
+        $exercise = AerobBike12min::get();
+        $minAge = $exercise->getMinAge();
+        $this->assertGreaterThan(0, $minAge);
+        $this->assertGreaterThan(0, $exercise->getMinResult(Gender::FEMALE(), $minAge));
+    }
+    
+    function testIsAerob()
+    {
+        $this->assertTrue(AerobBike12min::get()->isAerob());
+        $this->assertFalse(Motor4Situp::get()->isAerob());
     }
 
     function provideNameData()
     {
         return [
-            [FirstExercise12min::get(), 'first-exercise-12min'],
-            [SecondExercise1km::get(), 'second-exercise-1km'],
+            [AerobBike12min::get(), 'aerob-bike-12min', 'aerob-bike-12min'],
+            [AerobRun3km::get(), 'aerob-run-3km', 'aerob-run-3km'],
+            [Motor4Situp::get(), 'motor4-situp', 'situp'],
         ];
-    }
-
-    function provideUnitData()
-    {
-        return [
-            [FirstExercise12min::get(), Unit::MINUTE, Unit::METER, false, true],
-            [SecondExercise1km::get(), Unit::KILOMETER, Unit::MINUTE, true, false],
-        ];
-    }
-
-    function provideEvaluate()
-    {
-        return [
-            [0, Gender::MALE(), 24, 25.099999],
-            [1, Gender::MALE(), 24, 25.1],
-            [1, Gender::MALE(), 24, 25.199999],
-            [2, Gender::MALE(), 24, 35.2],
-            [2, Gender::MALE(), 24, 35.299999],
-            [3, Gender::MALE(), 24, 45.3],
-            [3, Gender::MALE(), 24, 55.399999],
-            [4, Gender::MALE(), 24, 55.4],
-        ];
-    }
-
-    public function testSingleton()
-    {
-        $a1 = FirstExercise12min::get();
-        $a2 = FirstExercise12min::get();
-        $b = SecondExercise1km::get();
-        $this->assertTrue($a1 instanceof Exercise);
-        $this->assertTrue($a2 instanceof Exercise);
-        $this->assertTrue($b instanceof Exercise);
-        $this->assertEquals($a1, $a2);
-        $this->assertNotEquals($a1, $b);
-    }
-
-    public function provideLookupClasses()
-    {
-        $r = [];
-        $di = new DirectoryIterator(realpath(__DIR__ . '/../..//src/Hungarofit/Evaluator/Exercise'));
-        foreach ($di as $classFile) {
-            if ($classFile->getExtension() !== 'php') {
-                continue;
-            }
-            $r[] = [
-                '\Hungarofit\Evaluator\Exercise\\' . $classFile->getBasename('.php')
-            ];
-        }
-        return $r;
     }
 
     /**
@@ -189,6 +85,15 @@ class ExerciseTest extends TestCase
     public function testName($x, $n)
     {
         $this->assertEquals($n, $x->getName());
+    }
+
+    function provideUnitData()
+    {
+        return [
+            [AerobBike12min::get(), Unit::MINUTE, Unit::METER, false, true],
+            [AerobRun3km::get(), Unit::KILOMETER, Unit::MINUTE, true, false],
+            [Motor4Situp::get(), Unit::COUNT, Unit::COUNT, true, true],
+        ];
     }
 
     /**
@@ -207,55 +112,49 @@ class ExerciseTest extends TestCase
         $this->assertEquals($bb, $x->getResultUnit()->isAscending());
     }
 
+    function provideEvaluate()
+    {
+        return [
+            [AerobBike12min::get(), Gender::MALE(), 24, 0, 0],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3449, 0],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3450, 1],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3519, 1],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3520, 2],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3589, 2],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3590, 3],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3659, 3],
+            [AerobBike12min::get(), Gender::MALE(), 24, 3660, 4],
+            [AerobBike12min::get(), Gender::MALE(), 24, 8850, 77],
+            [AerobBike12min::get(), Gender::MALE(), 24, 9999, 77],
+        ];
+    }
+
     /**
      * @dataProvider provideEvaluate
-     * @param float $points
+     * @param ExerciseInterface $exercise
      * @param Gender $gender
      * @param int $age
      * @param float $result
+     * @param float $points
      */
-    public function testEvaluate($points, Gender $gender, $age, $result)
+    public function testEvaluate(ExerciseInterface $exercise, Gender $gender, $age, $result, $points)
     {
-        $this->assertEquals($points, FirstExercise12min::get()->evaluate($gender, $age, $result));
+        $this->assertEquals($points, $exercise->evaluate($gender, $age, $result));
     }
 
-    public function testLimit()
+    public function provideLookupClasses()
     {
-        $this->assertEquals(1, FirstExercise12min::get()->getMinPoints(Gender::MALE(), 12));
-        $this->assertEquals(10.1, FirstExercise12min::get()->getMinResult(Gender::MALE(), 12));
-        $this->assertEquals(150, SecondExercise1km::get()->getMinResult(Gender::MALE(), 12));
-        $this->assertEquals(50, SecondExercise1km::get()->getMinResult(Gender::FEMALE(), 12));
-    }
-
-
-    public function testAgeArgument()
-    {
-        $lu = AerobBike12min::get();
-        $this->expectException(InvalidArgumentException::class);
-        $lu->evaluate(Gender::FEMALE(), 0, 0);
-        $this->expectException(InvalidArgumentException::class);
-    }
-
-    public function testResultArgument()
-    {
-        $lu = AerobBike12min::get();
-        $this->expectException(InvalidArgumentException::class);
-        $lu->evaluate(Gender::FEMALE(), 0, 0);
-    }
-
-    public function testMinResultArgument()
-    {
-        $lu = AerobBike12min::get();
-        $this->expectException(InvalidArgumentException::class);
-        $lu->getMinResult(Gender::FEMALE(), 0);
-    }
-
-    public function testMinKeys()
-    {
-        $lu = AerobBike12min::get();
-        $minAge = $lu->getMinAge();
-        $this->assertGreaterThan(0, $minAge);
-        $this->assertGreaterThan(0, $lu->getMinResult(Gender::FEMALE(), $minAge));
+        $r = [];
+        $di = new DirectoryIterator(realpath(__DIR__ . '/../../src/Hungarofit/Evaluator/Exercise'));
+        foreach ($di as $classFile) {
+            if ($classFile->getExtension() !== 'php') {
+                continue;
+            }
+            $r[] = [
+                '\Hungarofit\Evaluator\Exercise\\' . $classFile->getBasename('.php')
+            ];
+        }
+        return $r;
     }
 
     /**

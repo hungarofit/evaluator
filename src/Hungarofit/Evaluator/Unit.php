@@ -3,11 +3,11 @@
 namespace Hungarofit\Evaluator;
 
 /**
- * @method static MILE
- * @method static MINUTE
- * @method static KILOMETER
- * @method static METER
- * @method static COUNT
+ * @method static MILE()
+ * @method static MINUTE()
+ * @method static KILOMETER()
+ * @method static METER()
+ * @method static COUNT()
  */
 class Unit extends Enum
 {
