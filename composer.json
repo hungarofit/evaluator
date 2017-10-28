@@ -1,0 +1,25 @@
+{
+  "name": "hungarofit/evaluator",
+  "description": "Hungarofit evaluator logic library for PHP",
+  "minimum-stability": "dev",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "Dr. Fehérné dr. Mérey Ildikó",
+      "email": "feherne.ildiko@kgk.uni-obuda.hu"
+    },
+    {
+      "name": "Lajos Bencz",
+      "email": "lazos@lazos.me"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Hungarofit\\Evaluator\\": "src/Hungarofit/Evaluator"
+    }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^5.7",
+    "monger/spreadsheet-reader": "^1.0"
+  }
+}
