@@ -35,6 +35,20 @@ class Exercise implements ExerciseInterface
         return self::$_instances[$class];
     }
 
+    /**
+     * @param string $name
+     * @return static
+     */
+    public static function fromName($name)
+    {
+        /** @var Exercise $class */
+        $class = Exercise::class . '\\' . Text::camelcase($name);
+        if(!class_exists($class)) {
+            throw new InvalidArgumentException('No such exercise: '.$name);
+        }
+        return $class::get();
+    }
+
     /** @var string */
     private $_name;
     /** @var string */
