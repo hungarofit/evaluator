@@ -73,7 +73,7 @@ class ExerciseTest extends TestCase
         return [
             [AerobBike12min::get(), 'aerob-bike-12min', 'aerob-bike-12min'],
             [AerobRun3km::get(), 'aerob-run-3km', 'aerob-run-3km'],
-            [Motor4Situp::get(), 'motor4-situp', 'situp'],
+            [Motor4Situp::get(), 'motor4-situp', 'motor4-situp'],
         ];
     }
 
