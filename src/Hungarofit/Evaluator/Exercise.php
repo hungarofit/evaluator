@@ -65,6 +65,7 @@ class Exercise implements ExerciseInterface
         $split = explode('\\', $class);
         $className = array_pop($split);
         $this->_name = Text::kebabcase($className);
+        /*
         $key = explode('-', $this->_name);
         switch($key[0]) {
             case 'motor3':
@@ -75,6 +76,8 @@ class Exercise implements ExerciseInterface
             default:
                 $this->_key = $this->_name;
         }
+        */
+        $this->_key = $this->_name;
         $this->_exerciseUnit = Unit::fromValue(static::UNIT_EXERCISE);
         $this->_resultUnit = Unit::fromValue(static::UNIT_RESULT);
     }
