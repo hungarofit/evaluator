@@ -56,6 +56,7 @@ class Exercise implements ExerciseInterface
     /** @var Unit */
     private $_exerciseUnit;
     /** @var Unit */
+    private $_resultUnit;
 
 
     protected function __construct()
