@@ -14,7 +14,13 @@ abstract class Challenge implements ChallengeInterface
     /** @var int */
     protected $_age;
     /** @var float[] */
-    protected $_results;
+    protected $_results = [];
+    /** @var float[] */
+    protected $_points = [];
+    /** @var int */
+    protected $_sum = 0;
+    /** @var bool */
+    protected $_dirty = true;
 
     public function __construct(Gender $gender=null, $age=null)
     {
@@ -66,6 +72,7 @@ abstract class Challenge implements ChallengeInterface
 
     function setGender(Gender $gender)
     {
+        $this->_dirty = true;
         $this->_gender = $gender;
         return $this;
     }
@@ -75,6 +82,7 @@ abstract class Challenge implements ChallengeInterface
         if($age < 1) {
             throw new InvalidArgumentException('Invalid age: '.$age);
         }
+        $this->_dirty = true;
         $this->_age = $age;
         return $this;
     }
@@ -84,8 +92,21 @@ abstract class Challenge implements ChallengeInterface
         if(!$this->isValidExercise($exercise)) {
             throw new InvalidArgumentException('Invalid exercise ' . get_class($exercise) . ' for challenge ' . get_class($this));
         }
+        $this->_dirty = true;
         $this->_results[get_class($exercise)] = $result;
         return $this;
+    }
+
+    function hasAerob()
+    {
+        foreach($this->_results as $class => $result) {
+            /** @var ExerciseInterface $exercise */
+            $exercise = $class::get();
+            if($exercise->isAerob()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function validate()
@@ -93,6 +114,7 @@ abstract class Challenge implements ChallengeInterface
         $errors = [];
         foreach($this->getRequiredExercises() as $requireAnd) {
             if(is_array($requireAnd)) {
+                /*
                 $or = false;
                 foreach($requireAnd as $requireOr) {
                     if(array_key_exists(get_class($requireOr), $this->_results)) {
@@ -105,6 +127,7 @@ abstract class Challenge implements ChallengeInterface
                         $errors[$requireOr->getKey()] = 'is optionally required';
                     }
                 }
+                */
             }
             else {
                 if(!array_key_exists(get_class($requireAnd), $this->_results)) {
@@ -132,25 +155,34 @@ abstract class Challenge implements ChallengeInterface
 
     function evaluate()
     {
-        $this->validate();
-        $points = [];
-        foreach($this->_results as $exerciseClass => $result) {
-            /** @var ExerciseInterface $exercise */
-            $exercise = $exerciseClass::get();
-            /*
-            if(array_key_exists($exercise->getKey(), $points)) {
-                throw new RuntimeException($exercise->getKey() . ' ('.$exercise->getName().') exercise name is already in use');
+        if($this->_dirty) {
+            $this->validate();
+            $this->_points = [];
+            $this->_sum = 0;
+            foreach($this->_results as $exerciseClass => $result) {
+                /** @var ExerciseInterface $exercise */
+                $exercise = $exerciseClass::get();
+                /*
+                if(array_key_exists($exercise->getKey(), $this->_points)) {
+                    throw new RuntimeException($exercise->getKey() . ' ('.$exercise->getName().') exercise name is already in use');
+                }
+                */
+                $p = $exercise->evaluate($this->_gender, $this->_age, $result);;
+                $this->_points[$exercise->getKey()] = $p;
+                $this->_sum+= $p;
             }
-            */
-            $points[$exercise->getKey()] = $exercise->evaluate($this->_gender, $this->_age, $result);
+            $this->_dirty = false;
         }
-        return $points;
+        return $this->_points;
     }
 
     function rate()
     {
-        $points = $this->evaluate();
-        $sum = array_sum($points);
+        $this->evaluate();
+        $sum = $this->_sum;
+        if(!$this->hasAerob()) {
+            $sum/= 0.45;
+        }
         $rating = 7;
         foreach(self::RATING as $k => $v) {
             if($sum > $v) {

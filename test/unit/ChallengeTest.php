@@ -33,7 +33,7 @@ class ChallengeTest extends TestCase
     public function provideEvaluate()
     {
         return [
-            [new Challenge\Hungarofit4(Gender::MALE(), 12), Rating::VERY_POOR(), [
+            [new Challenge\Hungarofit4(Gender::MALE(), 12), Rating::TERRIBLE(), [
                 [Motor4Jump::get(), 1.56, 1],
                 [Motor4Torso::get(), 34, 2],
                 [Motor4Situp::get(), 34, 0],
@@ -71,5 +71,17 @@ class ChallengeTest extends TestCase
         }
         $this->assertEquals($points, $c->evaluate());
         $this->assertEquals($rating, $c->rate());
+    }
+
+    public function testOptionalAerob()
+    {
+        $x = new Challenge\Hungarofit4(Gender::MALE(), 12);
+        $x->setPushup(40);
+        $x->setTorso(60);
+        $x->setSitup(50);
+        $x->setJump(1.92);
+        $this->assertEquals('GOOD', $x->rate()->getName());
+        $x->setAerobRun6min(1200);
+        $this->assertEquals('GOOD', $x->rate()->getName());
     }
 }
