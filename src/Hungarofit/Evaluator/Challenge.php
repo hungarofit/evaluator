@@ -33,7 +33,7 @@ abstract class Challenge implements ChallengeInterface
         if(strlen($name) > 3 && substr($name, 0, 3) === 'set' && strtolower($name[3]) !== $name[3]) {
             $key = Text::kebabcase(substr($name, 3));
             foreach($this->getValidExercises() as $exercise) {
-                $eKey = $exercise->getKey();
+                $eKey = $exercise->getName();
                 if($eKey === $key) {
                     $this->setResult($exercise, $arguments[0]);
                     return $this;
