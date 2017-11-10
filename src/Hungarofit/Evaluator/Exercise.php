@@ -35,32 +35,46 @@ class Exercise implements ExerciseInterface
         return self::$_instances[$class];
     }
 
+    /**
+     * @param string $name
+     * @return static
+     */
+    public static function fromName($name)
+    {
+        /** @var Exercise $class */
+        $class = Exercise::class . '\\' . Text::camelcase($name);
+        if(!class_exists($class)) {
+            throw new InvalidArgumentException('No such exercise: '.$name);
+        }
+        return $class::get();
+    }
+
     /** @var string */
-    private $_name;
+    protected $_name;
     /** @var string */
-    private $_key;
+    protected $_key;
     /** @var Unit */
-    private $_exerciseUnit;
+    protected $_exerciseUnit;
     /** @var Unit */
-    private $_resultUnit;
+    protected $_resultUnit;
 
 
     protected function __construct()
     {
-        $class = get_called_class();
-        $split = explode('\\', $class);
-        $className = array_pop($split);
-        $this->_name = Text::kebabcase($className);
-        $key = explode('-', $this->_name);
-        switch($key[0]) {
+        preg_match("/\\\?([^\\\]+)$/", get_called_class(), $match);
+        $this->_key = Text::kebabcase($match[1]);
+        unset($match);
+        preg_match("/^([^\\-]+)\\-(.+)/", $this->_key, $match);
+        switch($match[1]) {
             case 'motor3':
             case 'motor4':
             case 'motor6':
-                $this->_key = $key[1];
+                $this->_name = $match[2];
                 break;
             default:
-                $this->_key = $this->_name;
+                $this->_name = $this->_key;
         }
+        $this->_key = $this->_name;
         $this->_exerciseUnit = Unit::fromValue(static::UNIT_EXERCISE);
         $this->_resultUnit = Unit::fromValue(static::UNIT_RESULT);
     }

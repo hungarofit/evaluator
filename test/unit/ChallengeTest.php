@@ -4,9 +4,10 @@ use PHPUnit\Framework\TestCase;
 use Hungarofit\Evaluator\Gender;
 use Hungarofit\Evaluator\Rating;
 use Hungarofit\Evaluator\Challenge;
-use Hungarofit\Evaluator\Exercise\Motor3Jump;
-use Hungarofit\Evaluator\Exercise\Motor3Torso;
-use Hungarofit\Evaluator\Exercise\Motor3Situp;
+use Hungarofit\Evaluator\Exercise\Motor4Jump;
+use Hungarofit\Evaluator\Exercise\Motor4Pushup;
+use Hungarofit\Evaluator\Exercise\Motor4Situp;
+use Hungarofit\Evaluator\Exercise\Motor4Torso;
 use Hungarofit\Evaluator\Exercise\AerobRun6min;
 use Hungarofit\Evaluator\ChallengeInterface;
 
@@ -14,15 +15,17 @@ class ChallengeTest extends TestCase
 {
     public function testMagic()
     {
-        $x = new Challenge\Hungarofit3(Gender::MALE(), 12);
+        $x = new Challenge\Hungarofit4(Gender::MALE(), 12);
         $x->setJump(1.56);
         $x->setSitup(34);
         $x->setTorso(34);
+        $x->setPushup(34);
         $x->setAerobRun6min(660);
         $this->assertEquals([
             'jump' => 1,
-            'situp' => 1,
-            'torso' => 1,
+            'situp' => 0,
+            'torso' => 2,
+            'pushup' => 10,
             'aerob-run-6min' => 1,
         ], $x->evaluate());
     }
@@ -30,16 +33,18 @@ class ChallengeTest extends TestCase
     public function provideEvaluate()
     {
         return [
-            [new Challenge\Hungarofit3(Gender::MALE(), 12), Rating::VERY_POOR(), [
-                [Motor3Jump::get(), 1.56, 1],
-                [Motor3Torso::get(), 34, 1],
-                [Motor3Situp::get(), 34, 1],
+            [new Challenge\Hungarofit4(Gender::MALE(), 12), Rating::TERRIBLE(), [
+                [Motor4Jump::get(), 1.56, 1],
+                [Motor4Torso::get(), 34, 2],
+                [Motor4Situp::get(), 34, 0],
+                [Motor4Pushup::get(), 34, 10],
                 [AerobRun6min::get(), 660, 1],
             ]],
-            [new Challenge\Hungarofit3(Gender::MALE(), 12), Rating::EXCELLENT(), [
-                [Motor3Jump::get(), 2.2, 21],
-                [Motor3Torso::get(), 98, 21],
-                [Motor3Situp::get(), 98, 21],
+            [new Challenge\Hungarofit4(Gender::MALE(), 12), Rating::EXCELLENT(), [
+                [Motor4Jump::get(), 2.2, 21],
+                [Motor4Torso::get(), 98, 14],
+                [Motor4Situp::get(), 98, 13],
+                [Motor4Pushup::get(), 34, 10],
                 [AerobRun6min::get(), 1475, 77],
             ]],
         ];
@@ -66,5 +71,17 @@ class ChallengeTest extends TestCase
         }
         $this->assertEquals($points, $c->evaluate());
         $this->assertEquals($rating, $c->rate());
+    }
+
+    public function testOptionalAerob()
+    {
+        $x = new Challenge\Hungarofit4(Gender::MALE(), 12);
+        $x->setPushup(40);
+        $x->setTorso(60);
+        $x->setSitup(50);
+        $x->setJump(1.92);
+        $this->assertEquals('GOOD', $x->rate()->getName());
+        $x->setAerobRun6min(1200);
+        $this->assertEquals('GOOD', $x->rate()->getName());
     }
 }

@@ -42,6 +42,11 @@ interface ChallengeInterface
 
     /**
      * @return bool
+     */
+    function hasAerob();
+
+    /**
+     * @return bool
      * @throws Validate\Exception
      */
     function validate();
