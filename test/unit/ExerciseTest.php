@@ -80,11 +80,13 @@ class ExerciseTest extends TestCase
     /**
      * @dataProvider provideNameData
      * @param \Hungarofit\Evaluator\ExerciseInterface $x
-     * @param string $n
+     * @param string $name
+     * @param string $key
      */
-    public function testName($x, $n)
+    public function testName($x, $name, $key)
     {
-        $this->assertEquals($n, $x->getName());
+        $this->assertEquals($name, $x->getName());
+        $this->assertEquals($key, $x->getKey());
     }
 
     function provideUnitData()
