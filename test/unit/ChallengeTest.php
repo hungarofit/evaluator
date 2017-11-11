@@ -22,10 +22,10 @@ class ChallengeTest extends TestCase
         $x->setPushup(34);
         $x->setAerobRun6min(660);
         $this->assertEquals([
-            'jump' => 1,
-            'situp' => 0,
-            'torso' => 2,
-            'pushup' => 10,
+            'motor4-jump' => 1,
+            'motor4-situp' => 0,
+            'motor4-torso' => 2,
+            'motor4-pushup' => 10,
             'aerob-run-6min' => 1,
         ], $x->evaluate());
     }

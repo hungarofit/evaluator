@@ -52,7 +52,7 @@ interface ChallengeInterface
     function validate();
 
     /**
-     * @return bool
+     * @return float[]
      * @throws Validate\Exception
      */
     function evaluate();

@@ -74,7 +74,6 @@ class Exercise implements ExerciseInterface
             default:
                 $this->_name = $this->_key;
         }
-        $this->_key = $this->_name;
         $this->_exerciseUnit = Unit::fromValue(static::UNIT_EXERCISE);
         $this->_resultUnit = Unit::fromValue(static::UNIT_RESULT);
     }
