@@ -1,9 +1,14 @@
 package evaluator
 
+type ChallengeScoreExercise struct {
+	Score    Score `json:"score"`
+	ScoreMax Score `json:"score_max"`
+}
+
 type ChallengeScore struct {
-	Total     Score
-	Exercises map[Exercise]Score
-	WithAerob bool
+	Total     Score                               `json:"total"`
+	TotalMax  Score                               `json:"total_max"`
+	Exercises map[Exercise]ChallengeScoreExercise `json:"exercises"`
 }
 
 type Challenge string
