@@ -12,7 +12,7 @@ go run cmd/tables_generate/main.go
 ### Usage
 
 ```bash
-go get -u github.com/hungarofit/evaluator
+go get -u github.com/hungarofit/evaluator@master
 ```
 
 ```go
