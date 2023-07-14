@@ -15,8 +15,8 @@ type Challenge string
 
 const (
 	ChallengeUnknown        Challenge = ""
-	ChallengeHungarofit     Challenge = "hfit6"
-	ChallengeHungarofitMini Challenge = "hfit4"
+	ChallengeHungarofit     Challenge = "motor6"
+	ChallengeHungarofitMini Challenge = "motor4"
 )
 
 func (c Challenge) IsValid() bool {
