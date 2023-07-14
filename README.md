@@ -6,13 +6,31 @@
 
 ```bash
 # cwd: project root
-go table/generate.go
+go run cmd/tables_generate/main.go
 ```
 
 ### Usage
 
-```go
-
+```bash
+go get -u github.com/hungarofit/evaluator
 ```
 
-2017 &copy; Dr. Ildikó Mérey
+```go
+import "github.com/hungarofit/evaluator"
+
+func main() {
+    score, err := evaluator.Evaluate(evaluator.ChallengeHungarofitMini, evaluator.GenderFemale, 20, map[evaluator.Exercise]evaluator.ResultValue{
+		evaluator.ExerciseAerob_Run12Min: 3000.0,
+		evaluator.ExerciseMotor4_Jump:    20.0,
+		evaluator.ExerciseMotor4_Pushup:  20.0,
+		evaluator.ExerciseMotor4_Situp:   50.0,
+		evaluator.ExerciseMotor4_Torso:   70.0,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(score.Total)
+}
+```
+
+_Dr. Ildikó Mérey_, _Lajos Bencz_
