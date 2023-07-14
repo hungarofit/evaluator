@@ -96,7 +96,7 @@ func TableMaxScore(exercise Exercise, gender Gender, age Age) Score {
 	ai := t.AgeIndex(age)
 	s := t.scores[0]
 	for ri, row := range t.results {
-		if row[ai] > 0 {
+		if ai < len(row) && row[ai] > 0 {
 			s = t.scores[ri]
 		}
 	}
