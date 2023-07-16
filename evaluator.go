@@ -5,11 +5,18 @@ import (
 	"strings"
 )
 
-func Evaluate(challenge Challenge, gender Gender, age Age, results map[Exercise]ResultValue) (ChallengeScore, error) {
+func Evaluate(challenge Challenge, gender Gender, age Age, _results map[Exercise]ResultValue) (ChallengeScore, error) {
 	cs := ChallengeScore{
 		Total:     0,
 		TotalMax:  0,
 		Exercises: map[Exercise]ChallengeScoreExercise{},
+	}
+	results := map[Exercise]ResultValue{}
+	for e, v := range _results {
+		if !strings.HasPrefix(string(e), string(challenge)+"-") {
+			e = Exercise(string(challenge) + "-" + string(e))
+		}
+		results[e] = v
 	}
 	exMiss := []string{}
 	for _, ex := range challenge.GetExercizes() {
