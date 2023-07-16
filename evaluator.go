@@ -12,9 +12,11 @@ func Evaluate(challenge Challenge, gender Gender, age Age, _results map[Exercise
 		Exercises: map[Exercise]ChallengeScoreExercise{},
 	}
 	results := map[Exercise]ResultValue{}
+	sc := string(challenge)
 	for e, v := range _results {
-		if !strings.HasPrefix(string(e), string(challenge)+"-") {
-			e = Exercise(string(challenge) + "-" + string(e))
+		se := string(e)
+		if !strings.HasPrefix(se, sc+"-") && !strings.HasPrefix(se, string(ExerciseTypeAerob)+"-") {
+			e = Exercise(sc + "-" + se)
 		}
 		results[e] = v
 	}
