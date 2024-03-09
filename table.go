@@ -84,7 +84,7 @@ func TableMinScore(exercise Exercise, gender Gender, age Age) Score {
 	t := tables[exercise][gender]
 	ai := t.AgeIndex(age)
 	for ri, row := range t.results {
-		if row[ai] > 0 {
+		if ai < len(row) && row[ai] > 0 {
 			return t.scores[ri]
 		}
 	}
