@@ -84,13 +84,14 @@ func main() {
 		fmt.Println(xlsPath)
 		baseName := strings.TrimSuffix(n, sheetExtension)
 		exercise := evaluator.Exercise(baseName)
+		exerciseResultUnit := exercise.GetResultUnit()
 		if exercise.GetName() == "" {
 			log.Fatalln("invalid exercise: " + baseName)
 		}
 		tableData[exercise] = map[evaluator.Gender]map[string]interface{}{}
 		name := strcase.ToCamel(baseName)
 		for _, gender := range []evaluator.Gender{evaluator.GenderFemale, evaluator.GenderMale} {
-			log.Printf("%s (%s)\n", name, exercise.GetResultUnit())
+			log.Printf("%s (%s)\n", name, exerciseResultUnit)
 			ages, scores, results, err := processXlsxFile(xlsPath, gender)
 			if err != nil {
 				log.Fatalln(err)
@@ -98,7 +99,7 @@ func main() {
 			tableData[exercise][gender] = map[string]interface{}{
 				"Name":    name,
 				"name":    baseName,
-				"unit":    string(exercise.GetResultUnit()),
+				"unit":    string(exerciseResultUnit),
 				"gender":  gender.Int(),
 				"ages":    ages,
 				"scores":  scores,

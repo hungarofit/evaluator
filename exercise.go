@@ -74,32 +74,26 @@ func (e Exercise) GetName() string {
 }
 
 func (e Exercise) GetResultUnit() Unit {
-	et := e.GetType()
-	if et == "" {
+	unitType := e.GetType()
+	if unitType == "" {
 		return UnitUnknown
 	}
-	if et == ExerciseTypeAerob {
+	if unitType == ExerciseTypeAerob {
 		switch e {
 		case ExerciseAerob_Bike12Min:
-			return UnitMeter
 		case ExerciseAerob_Run12Min:
-			return UnitMeter
 		case ExerciseAerob_Run6Min:
-			return UnitMeter
 		case ExerciseAerob_Swim12Min:
 			return UnitMeter
 		case ExerciseAerob_Run1Mile:
-			return UnitMinute
 		case ExerciseAerob_Run1Mile5:
-			return UnitMinute
 		case ExerciseAerob_Run2Mile:
-			return UnitMinute
 		case ExerciseAerob_Run2Km:
-			return UnitMinute
 		case ExerciseAerob_Run3Km:
-			return UnitMinute
 		case ExerciseAerob_Swim500m:
 			return UnitMinute
+		default:
+			return UnitUnknown
 		}
 	}
 	if e == ExerciseMotor6_Throwsingle ||
