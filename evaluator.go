@@ -5,48 +5,48 @@ import (
 	"strings"
 )
 
-func Evaluate(challenge Challenge, gender Gender, age Age, _results map[Exercise]ResultValue) (ChallengeScore, error) {
-	cs := ChallengeScore{
+func Evaluate(challenge Challenge, gender Gender, age Age, inResults map[Exercise]ResultValue) (ChallengeScore, error) {
+	challengeScore := ChallengeScore{
 		Total:     0,
 		TotalMax:  0,
 		Exercises: map[Exercise]ChallengeScoreExercise{},
 	}
 	results := map[Exercise]ResultValue{}
-	sc := string(challenge)
-	for e, v := range _results {
-		se := string(e)
-		if !strings.HasPrefix(se, sc+"-") && !strings.HasPrefix(se, string(ExerciseTypeAerob)+"-") {
-			e = Exercise(sc + "-" + se)
+	challengeName := string(challenge)
+	for exercise, v := range inResults {
+		exerciseName := string(exercise)
+		if !strings.HasPrefix(exerciseName, challengeName+"-") && !strings.HasPrefix(exerciseName, string(ExerciseTypeAerob)+"-") {
+			exercise = Exercise(challengeName + "-" + exerciseName)
 		}
-		results[e] = v
+		results[exercise] = v
 	}
-	exMiss := []string{}
-	for _, ex := range challenge.GetExercizes() {
-		if _, ok := results[ex]; !ok {
-			exMiss = append(exMiss, string(ex))
+	missingExercises := []string{}
+	for _, exercise := range challenge.GetExercizes() {
+		if _, ok := results[exercise]; !ok {
+			missingExercises = append(missingExercises, string(exercise))
 		}
 	}
-	if len(exMiss) > 0 {
-		exList := []string{}
+	if len(missingExercises) > 0 {
+		exerciseList := []string{}
 		for ex := range results {
-			exList = append(exList, string(ex))
+			exerciseList = append(exerciseList, string(ex))
 		}
-		l := strings.Join(exList, ",")
-		m := strings.Join(exMiss, ",")
-		return cs, fmt.Errorf("not all exercies (%s) have results, missing: %s", l, m)
+		l := strings.Join(exerciseList, ",")
+		m := strings.Join(missingExercises, ",")
+		return challengeScore, fmt.Errorf("not all exercies (%s) have results, missing: %s", l, m)
 	}
-	for ex, rv := range results {
-		s, err := TableEvaluate(ex, gender, age, rv)
+	for exercise, resultValue := range results {
+		score, err := TableEvaluate(exercise, gender, age, resultValue)
 		if err != nil {
-			return cs, err
+			return challengeScore, err
 		}
-		m := TableMaxScore(ex, gender, age)
-		cs.Exercises[ex] = ChallengeScoreExercise{
-			Score:    s,
-			ScoreMax: m,
+		scoreMax := TableMaxScore(exercise, gender, age)
+		challengeScore.Exercises[exercise] = ChallengeScoreExercise{
+			Score:    score,
+			ScoreMax: scoreMax,
 		}
-		cs.Total += s
-		cs.TotalMax += m
+		challengeScore.Total += score
+		challengeScore.TotalMax += scoreMax
 	}
-	return cs, nil
+	return challengeScore, nil
 }
