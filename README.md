@@ -33,4 +33,4 @@ func main() {
 }
 ```
 
-_Dr. Ildikó Mérey_, _Lajos Bencz_
+2014 © _Dr. Ildikó Dr. Fehérné Mérey_
