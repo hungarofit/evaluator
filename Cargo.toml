@@ -10,7 +10,7 @@ homepage = "https://hungarofit.hu"
 keywords = ["health", "fitness", "evaluator", "hungarofit", "exercise", "sport"]
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = true 
+wasm-opt = ["-O", "--enable-bulk-memory"]
 
 [lib]
 # cydlib is for the WASM target; rlib is for standard Rust use
