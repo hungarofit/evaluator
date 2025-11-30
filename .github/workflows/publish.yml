@@ -40,4 +40,6 @@ jobs:
         wasm-pack build --target bundler --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir pkg
 
     - name: Publish to npm with provenance
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       run: cd pkg && npm publish --provenance --access public
