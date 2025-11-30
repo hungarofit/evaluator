@@ -25,13 +25,11 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      # - uses: jetli/wasm-pack-action@v0.4.0
+      - uses: jetli/wasm-pack-action@v0.4.0
 
-      - uses: BlackAsLight/setup-binaryen@v1.1.1
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: Zxilly/setup-binaryen@v1.0.0
         with:
-          version: version_117
+          version: "117"
 
       - name: Build
         run: |
