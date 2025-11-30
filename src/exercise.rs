@@ -1,7 +1,8 @@
 use std::fmt;
-use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(not(target_arch = "wasm32"), non_exhaustive)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen)]
 pub enum Exercise {
     // Motor exercises (shared between Motor4 and Motor6)
     Jump,
@@ -25,20 +26,20 @@ pub enum Exercise {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(not(target_arch = "wasm32"), non_exhaustive)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen)]
 pub enum ChallengeType {
     Hungarofit,
     HungarofitMini,
 }
 
 impl Exercise {
-    /// Resolve to table name based on challenge context
-    /// For motor exercises, requires challenge context to determine motor4 vs motor6
     pub fn table_name(&self, challenge_context: Option<ChallengeType>) -> &'static str {
         match self {
             Self::Jump => match challenge_context {
                 Some(ChallengeType::Hungarofit) => "motor6-jump",
                 Some(ChallengeType::HungarofitMini) => "motor4-jump",
-                None => "motor6-jump", // default to motor6 if no context
+                None => "motor6-jump",
             },
             Self::Pushup => match challenge_context {
                 Some(ChallengeType::Hungarofit) => "motor6-pushup",
@@ -70,7 +71,7 @@ impl Exercise {
         }
     }
 
-    pub fn is_aerob(&self) -> bool {
+    pub const fn is_aerob(&self) -> bool {
         matches!(
             self,
             Self::AerobBike12Min
@@ -225,17 +226,20 @@ impl ChallengeType {
     }
 }
 
-impl FromStr for Exercise {
-    type Err = String;
+use std::convert::TryFrom;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+
+impl TryFrom<&str> for Exercise {
+    type Error = String;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s {
-            "jump" => Ok(Self::Jump),
-            "pushup" => Ok(Self::Pushup),
-            "situp" => Ok(Self::Situp),
-            "torso" => Ok(Self::Torso),
-            "throwdouble" | "throw-double" => Ok(Self::ThrowDouble),
-            "throwsingle" | "throw-single" => Ok(Self::ThrowSingle),
+            "jump" | "motor4-jump" | "motor6-jump" => Ok(Self::Jump),
+            "pushup" | "motor4-pushup" | "motor6-pushup" => Ok(Self::Pushup),
+            "situp" | "motor4-situp" | "motor6-situp" => Ok(Self::Situp),
+            "torso" | "motor4-torso" | "motor6-torso" => Ok(Self::Torso),
+            "throwdouble" | "throw-double" | "motor6-throwdouble" => Ok(Self::ThrowDouble),
+            "throwsingle" | "throw-single" | "motor6-throwsingle" => Ok(Self::ThrowSingle),
             "aerob-bike-12min" => Ok(Self::AerobBike12Min),
             "aerob-run-12min" => Ok(Self::AerobRun12Min),
             "aerob-run-1mile" => Ok(Self::AerobRun1Mile),
@@ -246,17 +250,6 @@ impl FromStr for Exercise {
             "aerob-run-6min" => Ok(Self::AerobRun6Min),
             "aerob-swim-12min" => Ok(Self::AerobSwim12Min),
             "aerob-swim-500m" => Ok(Self::AerobSwim500M),
-            // Legacy table names
-            "motor4-jump" => Ok(Self::Jump),
-            "motor4-pushup" => Ok(Self::Pushup),
-            "motor4-situp" => Ok(Self::Situp),
-            "motor4-torso" => Ok(Self::Torso),
-            "motor6-jump" => Ok(Self::Jump),
-            "motor6-pushup" => Ok(Self::Pushup),
-            "motor6-situp" => Ok(Self::Situp),
-            "motor6-torso" => Ok(Self::Torso),
-            "motor6-throwdouble" => Ok(Self::ThrowDouble),
-            "motor6-throwsingle" => Ok(Self::ThrowSingle),
             _ => Err(format!("Unknown exercise: {}", s)),
         }
     }
@@ -289,6 +282,7 @@ impl fmt::Display for Exercise {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::convert::TryInto;
 
     #[test]
     fn test_exercise_table_name() {
@@ -338,13 +332,10 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {
-        assert_eq!("jump".parse::<Exercise>().unwrap(), Exercise::Jump);
-        assert_eq!("motor6-jump".parse::<Exercise>().unwrap(), Exercise::Jump);
-        assert_eq!(
-            "aerob-run-2km".parse::<Exercise>().unwrap(),
-            Exercise::AerobRun2Km
-        );
-        assert!("invalid".parse::<Exercise>().is_err());
+    fn test_try_from_str() {
+        assert_eq!(Exercise::try_from("jump").unwrap(), Exercise::Jump);
+        assert_eq!(Exercise::try_from("motor6-jump").unwrap(), Exercise::Jump);
+        assert_eq!(Exercise::try_from("aerob-run-2km").unwrap(), Exercise::AerobRun2Km);
+        assert!(Exercise::try_from("x").is_err());
     }
 }

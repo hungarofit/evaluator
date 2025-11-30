@@ -1,30 +1,27 @@
+use std::convert::TryFrom;
 use std::fmt;
-use std::str::FromStr;
 
-/// Represents the gender/sex of a person for exercise evaluation
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen)]
 pub enum Gender {
     Male,
     Female,
 }
 
 impl Gender {
-    /// Returns true if Male, false if Female
-    /// 
-    /// This is used for backward compatibility with table lookups
-    /// where Hungarian datasets use "fiúk" (boys) and "lányok" (girls)
-    pub fn is_male(&self) -> bool {
+    pub const fn is_male(&self) -> bool {
         matches!(self, Gender::Male)
     }
 }
 
-impl FromStr for Gender {
-    type Err = String;
+impl TryFrom<&str> for Gender {
+    type Error = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s.to_lowercase().as_str() {
-            "m" | "male" => Ok(Gender::Male),
-            "f" | "female" => Ok(Gender::Female),
+            "m" | "male" => Ok(Self::Male),
+            "f" | "female" => Ok(Self::Female),
             _ => Err(format!(
                 "Invalid gender '{}'. Use 'm'/'male' or 'f'/'female'",
                 s
@@ -36,8 +33,8 @@ impl FromStr for Gender {
 impl fmt::Display for Gender {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Gender::Male => write!(f, "Male"),
-            Gender::Female => write!(f, "Female"),
+            Self::Male => write!(f, "Male"),
+            Self::Female => write!(f, "Female"),
         }
     }
 }
@@ -45,23 +42,24 @@ impl fmt::Display for Gender {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::convert::TryInto;
 
     #[test]
-    fn test_from_str() {
-        assert_eq!("m".parse::<Gender>().unwrap(), Gender::Male);
-        assert_eq!("M".parse::<Gender>().unwrap(), Gender::Male);
-        assert_eq!("male".parse::<Gender>().unwrap(), Gender::Male);
-        assert_eq!("Male".parse::<Gender>().unwrap(), Gender::Male);
-        assert_eq!("MALE".parse::<Gender>().unwrap(), Gender::Male);
+    fn test_try_from_str() {
+        assert_eq!(Gender::try_from("m").unwrap(), Gender::Male);
+        assert_eq!(Gender::try_from("M").unwrap(), Gender::Male);
+        assert_eq!(Gender::try_from("male").unwrap(), Gender::Male);
+        assert_eq!(Gender::try_from("Male").unwrap(), Gender::Male);
+        assert_eq!(Gender::try_from("MALE").unwrap(), Gender::Male);
 
-        assert_eq!("f".parse::<Gender>().unwrap(), Gender::Female);
-        assert_eq!("F".parse::<Gender>().unwrap(), Gender::Female);
-        assert_eq!("female".parse::<Gender>().unwrap(), Gender::Female);
-        assert_eq!("Female".parse::<Gender>().unwrap(), Gender::Female);
-        assert_eq!("FEMALE".parse::<Gender>().unwrap(), Gender::Female);
+        assert_eq!(Gender::try_from("f").unwrap(), Gender::Female);
+        assert_eq!(Gender::try_from("F").unwrap(), Gender::Female);
+        assert_eq!(Gender::try_from("female").unwrap(), Gender::Female);
+        assert_eq!(Gender::try_from("Female").unwrap(), Gender::Female);
+        assert_eq!(Gender::try_from("FEMALE").unwrap(), Gender::Female);
 
-        assert!("x".parse::<Gender>().is_err());
-        assert!("".parse::<Gender>().is_err());
+        assert!(Gender::try_from("x").is_err());
+        assert!(Gender::try_from("").is_err());
     }
 
     #[test]

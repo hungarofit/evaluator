@@ -1,16 +1,20 @@
-pub mod challenge;
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+#![allow(clippy::cargo_common_metadata)]
+#![allow(clippy::multiple_crate_versions)]
+#![allow(clippy::wildcard_imports)] // Sometimes desired for prelude-like modules
+
+
 pub mod evaluator;
 pub mod exercise;
 pub mod gender;
-pub mod loader;
 pub mod tables;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
 
+
 // Re-export main types for convenience
-pub use challenge::{ChallengeResult, Classification};
-pub use evaluator::{Evaluator, EvaluatorError};
+pub use evaluator::{Classification, Evaluator, EvaluatorError};
 pub use exercise::{ChallengeType, Exercise};
 pub use gender::Gender;
 pub use tables::{AllTables, Sheet, load_tables};
