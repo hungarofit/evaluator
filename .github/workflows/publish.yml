@@ -101,6 +101,29 @@ jobs:
       - name: Publish evaluator
         working-directory: dist/bundler/
         run: npm publish --provenance --access public
+
+  npm_publish_browser:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: pub
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+      
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      
+      - name: Upgrade NPM
+        run: npm install -g npm@latest
       
       - name: Publish evaluator-browser
         working-directory: dist/web/
