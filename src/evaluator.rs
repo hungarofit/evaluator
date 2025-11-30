@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::challenge::{ChallengeResult, Classification};
+use crate::challenge::{Challenge, ChallengeResult, Classification, ChallengeScore};
 use crate::exercise::{ChallengeType, Exercise};
 use crate::gender::Gender;
 use crate::tables::AllTables;
@@ -87,92 +87,34 @@ impl<'a> Evaluator<'a> {
     /// - Any exercise evaluation fails
     pub fn evaluate_challenge(
         &self,
-        challenge_type: ChallengeType,
+        challenge: Challenge,
         gender: Gender,
         age: u8,
-        results: &[(Exercise, f32)],
+        aerob_result: f32,
+        motor_results: Vec<f32>,
     ) -> Result<ChallengeResult, EvaluatorError> {
-        // Separate motor and aerob exercises
-        let (motor_results, aerob_results): (Vec<_>, Vec<_>) =
-            results.iter().partition(|(ex, _)| ex.is_motor());
-
-        // Validate exactly 1 aerob exercise
-        if aerob_results.len() != 1 {
-            return Err(EvaluatorError::InvalidAerobCount(aerob_results.len()));
+        let motor_exercises = challenge.challenge_type.motor_exercises();
+        if motor_exercises.len() != motor_results.len() {
+            return Err(EvaluatorError::InvalidChallenge(format!(
+                "Expected {} motor results, but got {}",
+                motor_exercises.len(),
+                motor_results.len()
+            )));
         }
 
-        // Validate motor exercises match challenge type
-        let required_exercises = challenge_type.motor_exercises();
-        for &(exercise, _) in &motor_results {
-            if !challenge_type.is_valid_motor_exercise(exercise) {
-                return Err(EvaluatorError::InvalidExerciseForChallenge {
-                    exercise,
-                    challenge: challenge_type,
-                });
-            }
+        let mut motor_scores = Vec::with_capacity(motor_results.len());
+        for (i, &exercise) in motor_exercises.iter().enumerate() {
+            let result = motor_results[i];
+            let score = self.evaluate(exercise, gender, age, result, Some(challenge.challenge_type))?;
+            motor_scores.push(ChallengeScore { exercise, score });
         }
+        
+        let aerob_score = self.evaluate(challenge.aerob_exercise, gender, age, aerob_result, Some(challenge.challenge_type))?;
+        let aerob_score = ChallengeScore { exercise: challenge.aerob_exercise, score: aerob_score};
 
-        // Check all required motor exercises are present
-        for &required_exercise in required_exercises {
-            if !motor_results
-                .iter()
-                .any(|(ex, _)| *ex == required_exercise)
-            {
-                return Err(EvaluatorError::MissingMotorExercise(required_exercise));
-            }
-        }
-
-        // Evaluate all exercises with challenge context
-        let mut exercise_scores = Vec::with_capacity(results.len());
-
-        for &(exercise, result) in results {
-            let score = self.evaluate(exercise, gender, age, result, Some(challenge_type))?;
-            exercise_scores.push((exercise, score));
-        }
-
-        Ok(ChallengeResult::new(exercise_scores))
+        Ok(ChallengeResult::new(motor_scores, aerob_score))
     }
 
-    /// Evaluate a partial challenge (some exercises may be missing)
-    ///
-    /// This is useful for tracking progress or when not all exercises have been completed yet.
-    /// Note that the classification may not be meaningful for partial results.
-    pub fn evaluate_partial_challenge(
-        &self,
-        challenge_type: ChallengeType,
-        gender: Gender,
-        age: u8,
-        results: &[(Exercise, f32)],
-    ) -> Result<ChallengeResult, EvaluatorError> {
-        // Separate motor and aerob exercises
-        let (motor_results, aerob_results): (Vec<_>, Vec<_>) =
-            results.iter().partition(|(ex, _)| ex.is_motor());
-
-        // Validate at most 1 aerob exercise
-        if aerob_results.len() > 1 {
-            return Err(EvaluatorError::InvalidAerobCount(aerob_results.len()));
-        }
-
-        // Validate motor exercises match challenge type
-        for &(exercise, _) in &motor_results {
-            if !challenge_type.is_valid_motor_exercise(exercise) {
-                return Err(EvaluatorError::InvalidExerciseForChallenge {
-                    exercise,
-                    challenge: challenge_type,
-                });
-            }
-        }
-
-        // Evaluate all exercises with challenge context
-        let mut exercise_scores = Vec::with_capacity(results.len());
-
-        for &(exercise, result) in results {
-            let score = self.evaluate(exercise, gender, age, result, Some(challenge_type))?;
-            exercise_scores.push((exercise, score));
-        }
-
-        Ok(ChallengeResult::new(exercise_scores))
-    }
 
     /// Get the classification for a given total score
     pub fn classify_score(&self, total_score: f32) -> Classification {
@@ -183,7 +125,7 @@ impl<'a> Evaluator<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tables::load_tables;
+    use crate::{challenge::Challenge, tables::load_tables};
 
     fn get_test_tables() -> AllTables {
         let data = include_bytes!("../generated_tables.bin");
@@ -215,97 +157,43 @@ mod tests {
     }
 
     #[test]
-    fn test_evaluate_challenge_invalid_aerob_count() {
+    fn test_evaluate_challenge_hungarofit() {
         let tables = get_test_tables();
         let evaluator = Evaluator::new(&tables);
+        let challenge = Challenge::new(ChallengeType::Hungarofit, Exercise::AerobRun2Km);
 
-        // No aerob exercise
         let result = evaluator.evaluate_challenge(
-            ChallengeType::Hungarofit,
+            challenge,
             Gender::Male,
             12,
-            &[
-                (Exercise::Jump, 2.0),
-                (Exercise::Pushup, 40.0),
-                (Exercise::Situp, 50.0),
-                (Exercise::ThrowDouble, 8.0),
-                (Exercise::ThrowSingle, 14.0),
-                (Exercise::Torso, 10.0),
-            ],
+            480.0,
+            vec![2.0, 40.0, 50.0, 8.0, 14.0, 10.0],
         );
-        assert!(matches!(
-            result,
-            Err(EvaluatorError::InvalidAerobCount(0))
-        ));
-
-        // Two aerob exercises
-        let result = evaluator.evaluate_challenge(
-            ChallengeType::Hungarofit,
-            Gender::Male,
-            12,
-            &[
-                (Exercise::Jump, 2.0),
-                (Exercise::Pushup, 40.0),
-                (Exercise::Situp, 50.0),
-                (Exercise::ThrowDouble, 8.0),
-                (Exercise::ThrowSingle, 14.0),
-                (Exercise::Torso, 10.0),
-                (Exercise::AerobRun2Km, 480.0),
-                (Exercise::AerobRun3Km, 720.0),
-            ],
-        );
-        assert!(matches!(
-            result,
-            Err(EvaluatorError::InvalidAerobCount(2))
-        ));
+        
+        assert!(result.is_ok());
+        let challenge_result = result.unwrap();
+        assert_eq!(challenge_result.motor_scores.len(), 6);
+        assert!(challenge_result.total_score > 0.0);
     }
 
     #[test]
-    fn test_evaluate_challenge_invalid_motor_exercise() {
+    fn test_evaluate_challenge_hungarofit_mini() {
         let tables = get_test_tables();
         let evaluator = Evaluator::new(&tables);
+        let challenge = Challenge::new(ChallengeType::HungarofitMini, Exercise::AerobRun2Km);
 
-        // ThrowDouble not valid for HungarofitMini
         let result = evaluator.evaluate_challenge(
-            ChallengeType::HungarofitMini,
+            challenge,
             Gender::Male,
             12,
-            &[
-                (Exercise::Jump, 2.0),
-                (Exercise::Pushup, 40.0),
-                (Exercise::Situp, 50.0),
-                (Exercise::Torso, 10.0),
-                (Exercise::ThrowDouble, 8.0), // Invalid for Motor4
-                (Exercise::AerobRun2Km, 480.0),
-            ],
+            480.0,
+            vec![2.0, 40.0, 50.0, 10.0],
         );
-        assert!(matches!(
-            result,
-            Err(EvaluatorError::InvalidExerciseForChallenge { .. })
-        ));
-    }
-
-    #[test]
-    fn test_evaluate_challenge_missing_motor_exercise() {
-        let tables = get_test_tables();
-        let evaluator = Evaluator::new(&tables);
-
-        // Missing Pushup
-        let result = evaluator.evaluate_challenge(
-            ChallengeType::HungarofitMini,
-            Gender::Male,
-            12,
-            &[
-                (Exercise::Jump, 2.0),
-                (Exercise::Situp, 50.0),
-                (Exercise::Torso, 10.0),
-                (Exercise::AerobRun2Km, 480.0),
-            ],
-        );
-        assert!(matches!(
-            result,
-            Err(EvaluatorError::MissingMotorExercise(_))
-        ));
+        
+        assert!(result.is_ok());
+        let challenge_result = result.unwrap();
+        assert_eq!(challenge_result.motor_scores.len(), 4);
+        assert!(challenge_result.total_score > 0.0);
     }
 
     #[test]

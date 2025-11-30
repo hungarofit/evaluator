@@ -1,6 +1,21 @@
 use std::fmt;
 
-use crate::exercise::Exercise;
+use crate::exercise::{ChallengeType, Exercise};
+
+#[derive(Debug, Clone, Copy)]
+pub struct Challenge {
+    pub challenge_type: ChallengeType,
+    pub aerob_exercise: Exercise,
+}
+
+impl Challenge {
+    pub fn new(challenge_type: ChallengeType, aerob_exercise: Exercise) -> Self {
+        Self {
+            challenge_type,
+            aerob_exercise,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Classification {
@@ -54,39 +69,31 @@ impl fmt::Display for Classification {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct ChallengeScore {
+    pub exercise: Exercise,
+    pub score: f32,
+}
+
 #[derive(Debug)]
 pub struct ChallengeResult {
     pub total_score: f32,
     pub classification: Classification,
-    pub exercise_scores: Vec<(Exercise, f32)>,
+    pub motor_scores: Vec<ChallengeScore>,
+    pub aerob_score: ChallengeScore,
 }
 
 impl ChallengeResult {
-    pub fn new(exercise_scores: Vec<(Exercise, f32)>) -> Self {
-        let total_score: f32 = exercise_scores.iter().map(|(_, score)| score).sum();
+    pub fn new(motor_scores: Vec<ChallengeScore>, aerob_score: ChallengeScore) -> Self {
+        let total_score = motor_scores.iter().map(|s| s.score).sum::<f32>() + aerob_score.score;
         let classification = Classification::from_score(total_score);
 
         Self {
             total_score,
             classification,
-            exercise_scores,
+            motor_scores,
+            aerob_score,
         }
-    }
-
-    pub fn motor_score(&self) -> f32 {
-        self.exercise_scores
-            .iter()
-            .filter(|(exercise, _)| exercise.is_motor())
-            .map(|(_, score)| score)
-            .sum()
-    }
-
-    pub fn aerob_score(&self) -> f32 {
-        self.exercise_scores
-            .iter()
-            .filter(|(exercise, _)| exercise.is_aerob())
-            .map(|(_, score)| score)
-            .sum()
     }
 }
 
@@ -124,27 +131,14 @@ mod tests {
 
     #[test]
     fn test_challenge_result_new() {
-        let scores = vec![
-            (Exercise::Jump, 10.0),
-            (Exercise::Pushup, 15.0),
-            (Exercise::AerobRun2Km, 12.0),
+        let motor_scores = vec![
+            ChallengeScore { exercise: Exercise::Jump, score: 10.0 },
+            ChallengeScore { exercise: Exercise::Pushup, score: 15.0 },
         ];
+        let aerob_score = ChallengeScore { exercise: Exercise::AerobRun2Km, score: 12.0 };
 
-        let result = ChallengeResult::new(scores);
+        let result = ChallengeResult::new(motor_scores, aerob_score);
         assert_eq!(result.total_score, 37.0);
         assert_eq!(result.classification, Classification::Weak);
-    }
-
-    #[test]
-    fn test_challenge_result_motor_aerob_scores() {
-        let scores = vec![
-            (Exercise::Jump, 10.0),
-            (Exercise::Pushup, 15.0),
-            (Exercise::AerobRun2Km, 12.0),
-        ];
-
-        let result = ChallengeResult::new(scores);
-        assert_eq!(result.motor_score(), 25.0);
-        assert_eq!(result.aerob_score(), 12.0);
     }
 }

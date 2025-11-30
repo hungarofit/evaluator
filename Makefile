@@ -15,7 +15,7 @@ help:
 wasm: check-wasm-pack
 	@echo "Building WASM for development..."
 	mkdir -p pkg/$(WASM_TARGET)
-	wasm-pack build --dev --target $(WASM_TARGET) --scope hungarofit --out-dir pkg/$(WASM_TARGET)
+	wasm-pack build --release --target $(WASM_TARGET) --scope hungarofit --out-dir pkg/$(WASM_TARGET)
 	@echo ""
 	@echo "Development build complete!"
 	@$(MAKE) info
