@@ -85,5 +85,4 @@ jobs:
           evaluator.d.ts
           evaluator_bg.wasm
           package.json
-        tag_name: ${{ github.ref }}
         fail_on_unmatched_files: true
