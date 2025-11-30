@@ -1,3 +1,8 @@
-.idea/
-.vscode/
-.history/
+/target
+/dist
+/pkg
+/web
+!web/index.html
+
+*.txt
+*.bin

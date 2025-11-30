@@ -1,0 +1,48 @@
+[package]
+name = "evaluator"
+version = "0.0.1"
+edition = "2021"
+authors = ["Lajos Bencz"]
+description = "Hungarofit evaluator - WASM library for scoring exercises based on age and performance"
+license = "LGPL-3.0-or-later"
+repository = "https://github.com/hungarofit/evaluator"
+homepage = "https://hungarofit.hu"
+keywords = ["health", "fitness", "evaluator", "hungarofit", "exercise", "sport"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[features]
+binary = ["dep:clap"]
+
+[dependencies]
+half = "2.7.1"
+thiserror = "2.0"
+wasm-bindgen = "0.2"
+once_cell = "1.19"
+clap = { version = "4.5", features = ["derive"], optional = true }
+
+[build-dependencies]
+calamine = "0.26"
+half = "2.7.1"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.dev.build-override]
+debug = true
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable link-time optimization
+codegen-units = 1   # Maximize optimization
+strip = true        # Strip symbols
+panic = "abort"     # Smaller panic handler
+
+[profile.release.package."*"]
+opt-level = "z"
+
+[[bin]]
+name = "CLI"
+path = "src/main.rs"
+required-features = ["binary"]
