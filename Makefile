@@ -1,4 +1,4 @@
-.PHONY: help wasm clean install-tools check-wasm-pack info serve
+.PHONY: help wasm clean check-wasm-pack info serve
 
 WASM_TARGET ?= web
 
@@ -8,14 +8,14 @@ help:
 	@echo "  make wasm          - Build WASM"
 	@echo "  make serve         - Start local server with proper WASM MIME types"
 	@echo "  make clean         - Remove build artifacts"
-	@echo "  make install-tools - Install required tools (wasm-pack)"
 	@echo "  make info          - Show WASM output information"
 	@echo ""
 	@echo "The generated_tables.bin is embedded in the WASM binary."
 
 wasm: check-wasm-pack
 	@echo "Building WASM for development..."
-	wasm-pack build --dev --target $(WASM_TARGET) --scope hungarofit --out-dir web
+	mkdir -p pkg/$(WASM_TARGET)
+	wasm-pack build --dev --target $(WASM_TARGET) --scope hungarofit --out-dir pkg/$(WASM_TARGET)
 	@echo ""
 	@echo "Development build complete!"
 	@$(MAKE) info
@@ -24,18 +24,7 @@ wasm: check-wasm-pack
 check-wasm-pack:
 	@if ! command -v wasm-pack >/dev/null 2>&1; then \
 		echo "Error: wasm-pack not found."; \
-		echo "Run 'make install-tools' to install it, or install manually:"; \
-		echo "curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh"; \
 		exit 1; \
-	fi
-
-# Install required tools
-install-tools:
-	@echo "Installing wasm-pack..."
-	@if ! command -v wasm-pack >/dev/null 2>&1; then \
-		curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh; \
-	else \
-		echo "wasm-pack is already installed"; \
 	fi
 
 # Display information about the build output

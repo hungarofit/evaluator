@@ -14,6 +14,8 @@ jobs:
       status: success
 
     steps:
+      - run: jq --version
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -29,17 +31,23 @@ jobs:
 
       - uses: Zxilly/setup-binaryen@v1.0.0
         with:
-          version: "117"
+          version: "124"
 
       - name: Build
         run: |
-          wasm-pack build --target web --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir web
+          wasm-pack build --target web --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir dist/web
+          wasm-pack build --target bundler --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir dist/bundler
+
+      - name: Patch package.json for evaluator-browser
+        working-directory: dist/web/
+        run: |
+          jq --arg name "@${GITHUB_REPOSITORY_OWNER}/evaluator-browser" '.name = $name' package.json > temp.json && mv temp.json package.json
 
       - name: Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: web/
+          path: dist/
 
   release:
     runs-on: ubuntu-latest
@@ -52,14 +60,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: web/
+          path: dist/bundler/
+      
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          working_directory: web
+          working_directory: dist/bundler/
           files: |
             evaluator_bg.wasm
             evaluator_bg.wasm.d.ts
+            evaluator_bg.js
             evaluator.js
             evaluator.d.ts
             package.json
@@ -77,14 +87,21 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: web/
+          path: dist/
+      
       - name: Setup NodeJS
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
+      
       - name: Upgrade NPM
         run: npm install -g npm@latest
-      - name: Publish
-        working-directory: web
+      
+      - name: Publish evaluator
+        working-directory: dist/bundler/
+        run: npm publish --provenance --access public
+      
+      - name: Publish evaluator-browser
+        working-directory: dist/web/
         run: npm publish --provenance --access public
