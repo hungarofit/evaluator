@@ -27,7 +27,7 @@ jobs:
 
       - uses: jetli/wasm-pack-action@v0.4.0
 
-      - uses: Aandreba/setup-binaryen
+      - uses: Aandreba/setup-binaryen@v1.0.0
         with:
           token: ''
 
