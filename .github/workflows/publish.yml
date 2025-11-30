@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -43,3 +43,47 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       run: cd pkg && npm publish --provenance --access public
+
+  publish-cdn:
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Extract version from tag
+      run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install wasm-pack
+      uses: jetli/wasm-pack-action@v0.4.0
+
+    - name: Build WASM package for web
+      run: |
+        wasm-pack build --target web --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir web
+
+    - name: Install Terser
+      run: npm install -g terser
+
+    - name: Minify JS
+      run: terser web/evaluator.js -c -m -o web/evaluator.js
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        working_directory: web
+        files: |
+          evaluator.js
+          evaluator.d.ts
+          evaluator_bg.wasm
+          package.json
+        tag_name: ${{ github.ref }}
+        fail_on_unmatched_files: true
