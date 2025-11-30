@@ -60,7 +60,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/bundler/
+          path: dist/
       
       - name: Release
         uses: softprops/action-gh-release@v2
