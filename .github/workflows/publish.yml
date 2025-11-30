@@ -37,7 +37,7 @@ jobs:
 
     - name: Build WASM package
       run: |
-        wasm-pack build --target web --out-dir pkg
+        wasm-pack build --target bundler --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir pkg
 
     - name: Publish to npm with provenance
-      run: cd pkg && npm publish --provenance --scope ${GITHUB_REPOSITORY_OWNER} --access public
+      run: cd pkg && npm publish --provenance --access public
