@@ -27,9 +27,7 @@ jobs:
 
       - uses: jetli/wasm-pack-action@v0.4.0
 
-      - uses: Aandreba/setup-binaryen@v1.0.0
-        with:
-          token: ''
+      - uses: BlackAsLight/setup-binaryen@v1.1.1
 
       - name: Build
         run: |
