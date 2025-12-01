@@ -10,6 +10,7 @@ use crate::{
 };
 use once_cell::sync::Lazy;
 use wasm_bindgen::JsValue;
+use std::convert::TryFrom;
 
 #[wasm_bindgen(inline_js = r#"
 export function createObject() { return {}; }
@@ -352,6 +353,23 @@ impl EvaluatorMiniWithAgeGender {
 }
 
 
+// ============================================================================
+// Exercise helper functions
+// ============================================================================
+
+/// Convert a string to an Exercise enum variant.
+/// Returns the Exercise if successful, or throws an error if the string is invalid.
+/// 
+/// Supported formats include:
+/// - Short names: "jump", "pushup", "situp", "torso"
+/// - Motor variants: "motor4-jump", "motor6-jump", etc.
+/// - Throw variants: "throwdouble", "throw-double", "motor6-throwdouble"
+/// - Aerob exercises: "aerob-run-2km", "aerob-swim-500m", etc.
+#[wasm_bindgen(js_name = exerciseFromString)]
+pub fn exercise_from_string(s: &str) -> Result<Exercise, JsValue> {
+    Exercise::try_from(s).map_err(|e| JsValue::from_str(&e))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -375,5 +393,13 @@ mod tests {
         
         let eval = result1.unwrap();
         assert!(eval.total_score > 0.0);
+    }
+
+    #[test]
+    fn test_exercise_from_string() {
+        assert_eq!(exercise_from_string("aerob-swim-500m").unwrap(), Exercise::AerobSwim500M);
+        assert_eq!(exercise_from_string("jump").unwrap(), Exercise::Jump);
+        assert_eq!(exercise_from_string("motor6-throwdouble").unwrap(), Exercise::ThrowDouble);
+        assert!(exercise_from_string("invalid").is_err());
     }
 }
