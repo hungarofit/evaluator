@@ -41,7 +41,10 @@ jobs:
       - name: Patch package.json for evaluator-browser
         working-directory: dist/web/
         run: |
-          jq --arg name "@${GITHUB_REPOSITORY_OWNER}/evaluator-browser" '.name = $name' package.json > temp.json && mv temp.json package.json
+          # Updates the name abd adds "snippets" to the files array to ensure it's published
+          jq --arg name "@${GITHUB_REPOSITORY_OWNER}/evaluator-browser" \
+            '.name = $name | .files += ["snippets"] | .files |= unique' \
+            package.json > temp.json && mv temp.json package.json
 
       - name: Artifacts
         uses: actions/upload-artifact@v4
