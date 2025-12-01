@@ -33,18 +33,31 @@ jobs:
         with:
           version: "124"
 
-      - name: Build
+      - name: Build for backend
+        run: |
+          wasm-pack build --target bundler --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir dist/bundler
+      
+      - name: Patch backend package.json
+        working-directory: dist/bundler/
+        run: |
+          jq '.files += ["snippets"] | .files |= unique' \
+            package.json > temp.json && mv temp.json package.json
+
+      - name: Build for browser
         run: |
           wasm-pack build --target web --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir dist/web
-          wasm-pack build --target bundler --release --scope ${GITHUB_REPOSITORY_OWNER} --out-dir dist/bundler
-
-      - name: Patch package.json for evaluator-browser
+      
+      - name: Patch browser package.json
         working-directory: dist/web/
         run: |
-          # Updates the name abd adds "snippets" to the files array to ensure it's published
           jq --arg name "@${GITHUB_REPOSITORY_OWNER}/evaluator-browser" \
             '.name = $name | .files += ["snippets"] | .files |= unique' \
             package.json > temp.json && mv temp.json package.json
+      
+      - name: Distribute README files
+        run: |
+          cp docs/README-NPM.md dist/bundler/README.md
+          cp docs/README-NPM-BROWSER.md dist/web/README.md
 
       - name: Artifacts
         uses: actions/upload-artifact@v4
