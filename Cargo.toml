@@ -17,23 +17,25 @@ wasm-opt = ["-O", "--enable-bulk-memory"]
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
-name = "CLI"
-path = "src/main.rs"
-required-features = ["binary"] 
+name = "lookup"
+path = "src/bin/lookup.rs"
+required-features = ["binary"]
 
 [features]
 binary = ["dep:clap"]
 
 [dependencies]
 half = "2.7.1"
-thiserror = "2.0"
 wasm-bindgen = "0.2"
 once_cell = "1.19"
+lz4 = "1.28.1"
 clap = { version = "4.5", features = ["derive"], optional = true }
 
 [build-dependencies]
 calamine = "0.32"
 half = "2.7.1"
+anyhow = "1.0"
+lz4 = "1.28.1"
 
 [profile.dev.build-override]
 debug = true

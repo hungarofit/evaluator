@@ -1,213 +1,141 @@
-use std::fmt;
-use thiserror::Error;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
 
-use crate::exercise::{ChallengeType, Exercise};
+#[cfg(target_arch = "wasm32")]
+use crate::classification::Classification;
+#[cfg(target_arch = "wasm32")]
+use crate::evaluation_results::{HungarofitEvaluation, HungarofitMiniEvaluation};
+#[cfg(target_arch = "wasm32")]
 use crate::gender::Gender;
-use crate::tables::AllTables;
+#[cfg(target_arch = "wasm32")]
+use crate::lookup;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(not(target_arch = "wasm32"), non_exhaustive)]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen)]
-pub enum Classification {
-    Concerning,
-    Weak,
-    Mediocre,
-    Average,
-    Good,
-    Excellent,
-    Outstanding,
+use crate::exercise::Exercise;
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/// Returns the list of motor6 exercises used in the full Hungarofit evaluation
+pub fn hungarofit_exercise_list() -> Vec<Exercise> {
+    vec![
+        Exercise::Motor6Jump,
+        Exercise::Motor6Pushup,
+        Exercise::Motor6Situp,
+        Exercise::Motor6Torso,
+        Exercise::Motor6ThrowDouble,
+        Exercise::Motor6ThrowSingle,
+    ]
 }
 
-impl Classification {
-    pub const fn from_score(score: f32) -> Self {
-        match score {
-            s if s < 20.5 => Self::Concerning,
-            s if s < 40.5 => Self::Weak,
-            s if s < 60.5 => Self::Mediocre,
-            s if s < 80.5 => Self::Average,
-            s if s < 100.5 => Self::Good,
-            s if s < 120.5 => Self::Excellent,
-            _ => Self::Outstanding,
-        }
-    }
-
-    pub fn score_range(&self) -> (f32, f32) {
-        match self {
-            Self::Concerning => (0.0, 20.499),
-            Self::Weak => (20.5, 40.499),
-            Self::Mediocre => (40.5, 60.499),
-            Self::Average => (60.5, 80.499),
-            Self::Good => (80.5, 100.499),
-            Self::Excellent => (100.5, 120.499),
-            Self::Outstanding => (120.5, 140.0),
-        }
-    }
+/// Returns the list of motor4 exercises used in the Hungarofit Mini evaluation
+pub fn hungarofit_mini_exercise_list() -> Vec<Exercise> {
+    vec![
+        Exercise::Motor4Jump,
+        Exercise::Motor4Pushup,
+        Exercise::Motor4Situp,
+        Exercise::Motor4Torso,
+    ]
 }
 
-impl fmt::Display for Classification {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let name = match self {
-            Self::Concerning => "Concerning",
-            Self::Weak => "Weak",
-            Self::Mediocre => "Mediocre",
-            Self::Average => "Average",
-            Self::Good => "Good",
-            Self::Excellent => "Excellent",
-            Self::Outstanding => "Outstanding",
-        };
-        write!(f, "{}", name)
-    }
-}
+// ============================================================================
+// Evaluator Functions
+// ============================================================================
 
-#[derive(Debug, Error)]
-#[non_exhaustive]
-pub enum EvaluatorError {
-    #[error("Exercise '{exercise}' not found in tables")]
-    ExerciseNotFound {
-        exercise: Exercise,
-    },
-    #[error("Age {age} is out of range for exercise '{exercise}'")]
-    AgeOutOfRange {
-        age: u8,
-        exercise: Exercise,
-    },
-    #[error("Challenge type is required for motor exercise '{exercise}'")]
-    ChallengeTypeRequired {
-        exercise: Exercise,
-    },
-}
-
-pub struct Evaluator<'a> {
-    tables: &'a AllTables,
-}
-
-impl<'a> Evaluator<'a> {
-    pub const fn new(tables: &'a AllTables) -> Self {
-        Self { tables }
-    }
-
-    #[must_use]
-    pub fn evaluate(
-        &self,
-        exercise: Exercise,
-        gender: Gender,
-        age: u8,
-        result: f32,
-        challenge_context: Option<ChallengeType>,
-    ) -> Result<f32, EvaluatorError> {
-        if exercise.is_motor() && challenge_context.is_none() {
-            return Err(EvaluatorError::ChallengeTypeRequired { exercise });
-        }
-
-        let table_name = exercise.table_name(challenge_context);
-        let sheet = self
-            .tables
-            .get_sheet(table_name, gender.is_male())
-            .ok_or(EvaluatorError::ExerciseNotFound { exercise })?;
-
-        sheet
-            .lookup(age, result)
-            .ok_or(EvaluatorError::AgeOutOfRange { age, exercise })
-    }
-
-    pub fn classify_score(&self, total_score: f32) -> Classification {
-        Classification::from_score(total_score)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tables::load_tables;
-
-    fn get_test_tables() -> AllTables {
-        let data = include_bytes!("../generated_tables.bin");
-        load_tables(data)
-    }
-
-    #[test]
-    fn test_evaluate_single_exercise() {
-        let tables = get_test_tables();
-        let evaluator = Evaluator::new(&tables);
-
-        // Test a motor6 exercise with context
-        let score = evaluator
-            .evaluate(
-                Exercise::Jump,
-                Gender::Male,
-                12,
-                2.0,
-                Some(ChallengeType::Hungarofit),
-            )
-            .unwrap();
-        assert!(score >= 0.0);
-
-        // Test an aerob exercise without context
-        let score = evaluator
-            .evaluate(Exercise::AerobRun2Km, Gender::Male, 12, 480.0, None)
-            .unwrap();
-        assert!(score >= 0.0);
-    }
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = "evaluate")]
+pub fn evaluate(
+    gender: Gender,
+    age: u8,
+    aerob_exercise: Exercise,
+    aerob_result: f32,
+    motor_jump: f32,
+    motor_pushup: f32,
+    motor_situp: f32,
+    motor_torso: f32,
+    motor_throwdouble: f32,
+    motor_throwsingle: f32,
+) -> Result<HungarofitEvaluation, JsError> {
+    const MIN_AGE: u8 = 7;
+    const MAX_AGE: u8 = 20;
     
-    #[test]
-    fn test_evaluate_challenge_type_required_error() {
-        let tables = get_test_tables();
-        let evaluator = Evaluator::new(&tables);
-
-        let err = evaluator
-            .evaluate(
-                Exercise::Jump,
-                Gender::Male,
-                12,
-                2.0,
-                None, // Missing challenge_context
-            )
-            .unwrap_err();
-
-        assert!(matches!(err, EvaluatorError::ChallengeTypeRequired { exercise: Exercise::Jump }));
+    if age < MIN_AGE || age > MAX_AGE {
+        return Err(JsError::new(&format!("Invalid age {} for this evaluation (min: {}, max: {})", age, MIN_AGE, MAX_AGE)));
     }
 
-    #[test]
-    fn test_classify_score() {
-        let tables = get_test_tables();
-        let evaluator = Evaluator::new(&tables);
+    let aerob_score = lookup::lookup_internal(aerob_exercise, gender, age, aerob_result)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
 
-        assert_eq!(
-            evaluator.classify_score(10.0),
-            Classification::Concerning
-        );
-        assert_eq!(evaluator.classify_score(20.5), Classification::Weak);
-        assert_eq!(evaluator.classify_score(40.5), Classification::Mediocre);
-        assert_eq!(evaluator.classify_score(60.5), Classification::Average);
-        assert_eq!(evaluator.classify_score(80.5), Classification::Good);
-        assert_eq!(evaluator.classify_score(100.5), Classification::Excellent);
-        assert_eq!(evaluator.classify_score(120.5), Classification::Outstanding);
+    let jump_score = lookup::lookup_internal(Exercise::Motor6Jump, gender, age, motor_jump)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let pushup_score = lookup::lookup_internal(Exercise::Motor6Pushup, gender, age, motor_pushup)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let situp_score = lookup::lookup_internal(Exercise::Motor6Situp, gender, age, motor_situp)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let torso_score = lookup::lookup_internal(Exercise::Motor6Torso, gender, age, motor_torso)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let throwdouble_score = lookup::lookup_internal(Exercise::Motor6ThrowDouble, gender, age, motor_throwdouble)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let throwsingle_score = lookup::lookup_internal(Exercise::Motor6ThrowSingle, gender, age, motor_throwsingle)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+
+    let total_motor_score = jump_score + pushup_score + situp_score + torso_score + throwdouble_score + throwsingle_score;
+    let total_score = aerob_score + total_motor_score;
+
+    Ok(HungarofitEvaluation {
+        classification: Classification::from_score(total_score),
+        total_score,
+        aerob_score,
+        jump_score,
+        pushup_score,
+        situp_score,
+        torso_score,
+        throwdouble_score,
+        throwsingle_score,
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = "evaluateMini")]
+pub fn evaluate_mini(
+    gender: Gender,
+    age: u8,
+    aerob_exercise: Exercise,
+    aerob_result: f32,
+    motor_jump: f32,
+    motor_pushup: f32,
+    motor_situp: f32,
+    motor_torso: f32,
+) -> Result<HungarofitMiniEvaluation, JsError> {
+    const MIN_AGE: u8 = 4;
+    const MAX_AGE: u8 = 99;
+    
+    if age < MIN_AGE || age > MAX_AGE {
+        return Err(JsError::new(&format!("Invalid age {} for this evaluation (min: {}, max: {})", age, MIN_AGE, MAX_AGE)));
     }
 
-    #[test]
-    fn test_classification_from_score() {
-        assert_eq!(Classification::from_score(0.0), Classification::Concerning);
-        assert_eq!(Classification::from_score(20.49), Classification::Concerning);
-        assert_eq!(Classification::from_score(20.5), Classification::Weak);
-        assert_eq!(Classification::from_score(40.49), Classification::Weak);
-        assert_eq!(Classification::from_score(40.5), Classification::Mediocre);
-        assert_eq!(Classification::from_score(60.49), Classification::Mediocre);
-        assert_eq!(Classification::from_score(60.5), Classification::Average);
-        assert_eq!(Classification::from_score(80.49), Classification::Average);
-        assert_eq!(Classification::from_score(80.5), Classification::Good);
-        assert_eq!(Classification::from_score(100.49), Classification::Good);
-        assert_eq!(Classification::from_score(100.5), Classification::Excellent);
-        assert_eq!(Classification::from_score(120.49), Classification::Excellent);
-        assert_eq!(Classification::from_score(120.5), Classification::Outstanding);
-        assert_eq!(Classification::from_score(140.0), Classification::Outstanding);
-    }
+    let aerob_score = lookup::lookup_internal(aerob_exercise, gender, age, aerob_result)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
 
-    #[test]
-    fn test_classification_ordering() {
-        assert!(Classification::Concerning < Classification::Weak);
-        assert!(Classification::Weak < Classification::Mediocre);
-        assert!(Classification::Mediocre < Classification::Average);
-        assert!(Classification::Good < Classification::Excellent);
-        assert!(Classification::Excellent < Classification::Outstanding);
-    }
+    let jump_score = lookup::lookup_internal(Exercise::Motor4Jump, gender, age, motor_jump)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let pushup_score = lookup::lookup_internal(Exercise::Motor4Pushup, gender, age, motor_pushup)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let situp_score = lookup::lookup_internal(Exercise::Motor4Situp, gender, age, motor_situp)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+    let torso_score = lookup::lookup_internal(Exercise::Motor4Torso, gender, age, motor_torso)
+        .map_err(|e| JsError::new(&format!("Lookup error: {}", e)))?;
+
+    let total_motor_score = jump_score + pushup_score + situp_score + torso_score;
+    let total_score = aerob_score + total_motor_score;
+
+    Ok(HungarofitMiniEvaluation {
+        classification: Classification::from_score(total_score),
+        total_score,
+        aerob_score,
+        jump_score,
+        pushup_score,
+        situp_score,
+        torso_score,
+    })
 }

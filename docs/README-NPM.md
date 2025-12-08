@@ -13,39 +13,68 @@ npm install --save @hungarofit/evaluator
 ### Basic
 
 ```js
-import {Gender, Exercise, Evaluator, EvaluatorMini, exerciseFromString} from "@hungarofit/evaluator";
+import {Gender, Exercise, evaluate, evaluateMini, exerciseFromString} from "@hungarofit/evaluator";
 
 // 1 aerob + 6 motor exercises
-const evaluator = new Evaluator(Exercise.AerobRun12Min);
-const score = evaluator.evaluate(Gender.Male, 20, 2600, 2.4, 40, 70, 90, 1.4, 1.2);
+const score = evaluate(
+  Gender.Male,      // gender
+  20,               // age
+  Exercise.AerobRun12Min,  // aerobic exercise type
+  2600,             // aerobic result (meters)
+  2.4,              // long jump (meters)
+  40,               // push-ups (count)
+  70,               // sit-ups (count)
+  90,               // trunk lift (count)
+  1.4,              // medicine ball throw double hand (meters)
+  1.2               // medicine ball throw single hand (meters)
+);
 console.log(score.toJSON());
 
 // 1 aerob + 4 motor exercises
 const aerobExercise = exerciseFromString("aerob-run-12min");
-const evaluatorMini = new EvaluatorMini(aerobExercise);
-const scoreMini = evaluatorMini.evaluate(Gender.Male, 20, 2600, 2.4, 40, 70, 90);
+const scoreMini = evaluateMini(
+  Gender.Male,      // gender
+  20,               // age
+  aerobExercise,    // aerobic exercise type
+  2600,             // aerobic result (meters)
+  2.4,              // long jump (meters)
+  40,               // push-ups (count)
+  70,               // sit-ups (count)
+  90                // trunk lift (count)
+);
 console.log(scoreMini.toJSON());
 ```
 
-### Builder
+### Using exerciseFromString
 
 ```js
-import {Gender, Exercise, Evaluator, EvaluatorMini} from "@hungarofit/evaluator";
+import {Gender, evaluate, evaluateMini, exerciseFromString} from "@hungarofit/evaluator";
 
-// evaluator1 shares age for subsequent evaluations
-const evaluator1 = new Evaluator(Exercise.AerobRun12Min)
-    .with_age(20);
-const score1 = evaluator1.evaluate(Gender.Male, 2600, 2.4, 40, 70, 90, 1.4, 1.2);
+const aerobExercise = exerciseFromString("aerob-run-12min");
+
+const score1 = evaluate(
+  Gender.Male,      // gender
+  20,               // age
+  aerobExercise,    // aerobic exercise type
+  2600,             // aerobic result (meters)
+  2.4,              // long jump (meters)
+  40,               // push-ups (count)
+  70,               // sit-ups (count)
+  90,               // trunk lift (count)
+  1.4,              // medicine ball throw double hand (meters)
+  1.2               // medicine ball throw single hand (meters)
+);
 console.log(score1.toJSON());
-const score2 = evaluator1.evaluate(Gender.Male, 2700, 2.6, 50, 80, 100, 1.6, 1.4);
-console.log(score2.toJSON());
 
-// evaluator2 shares age + gender for subsequent evaluations
-const evaluator2 = new Evaluator(Exercise.AerobRun12Min)
-    .with_age(20)
-    .with_gender(Gender.Male);
-const score3 = evaluator2.evaluate(2600, 2.4, 40, 70, 90, 1.4, 1.2);
-console.log(score3.toJSON());
-const score4 = evaluator2.evaluate(2700, 2.6, 50, 80, 100, 1.6, 1.4);
-console.log(score4.toJSON());
+const score2 = evaluateMini(
+  Gender.Female,    // gender
+  25,               // age
+  aerobExercise,    // aerobic exercise type
+  1900,             // aerobic result (meters)
+  2.4,              // long jump (meters)
+  42,               // push-ups (count)
+  42,               // sit-ups (count)
+  42                // trunk lift (count)
+);
+console.log(score2.toJSON());
 ```

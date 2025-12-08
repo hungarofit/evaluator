@@ -1,37 +1,37 @@
-use std::convert::TryFrom;
-use std::fmt;
-
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen::prelude::wasm_bindgen)]
 pub enum Gender {
     Male,
     Female,
 }
 
+// Separate impl block for methods not exposed to wasm_bindgen directly
 impl Gender {
-    pub const fn is_male(&self) -> bool {
-        matches!(self, Gender::Male)
-    }
-}
+    #[allow(dead_code)]
+    const ALL: [Gender; 2] = [Gender::Female, Gender::Male];
 
-impl TryFrom<&str> for Gender {
-    type Error = String;
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        match s.to_lowercase().as_str() {
-            "m" | "male" => Ok(Self::Male),
-            "f" | "female" => Ok(Self::Female),
-            _ => Err(format!(
-                "Invalid gender '{}'. Use 'm'/'male' or 'f'/'female'",
-                s
-            )),
+    #[inline]
+    pub const fn sheet_index(&self) -> usize {
+        match self {
+            Self::Female => 0,
+            Self::Male => 1,
         }
     }
 }
 
-impl fmt::Display for Gender {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Gender {
+    #[allow(dead_code)]
+    pub fn from_string(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "male" => Some(Self::Male),
+            "female" => Some(Self::Female),
+            _ => None,
+        }
+    }
+}
+
+impl std::fmt::Display for Gender {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Male => write!(f, "Male"),
             Self::Female => write!(f, "Female"),
@@ -39,38 +39,17 @@ impl fmt::Display for Gender {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::convert::TryInto;
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = "genderList")]
+pub fn gender_list() -> Vec<String> {
+    Gender::ALL
+        .iter()
+        .map(|g| g.to_string().to_lowercase())
+        .collect()
+}
 
-    #[test]
-    fn test_try_from_str() {
-        assert_eq!(Gender::try_from("m").unwrap(), Gender::Male);
-        assert_eq!(Gender::try_from("M").unwrap(), Gender::Male);
-        assert_eq!(Gender::try_from("male").unwrap(), Gender::Male);
-        assert_eq!(Gender::try_from("Male").unwrap(), Gender::Male);
-        assert_eq!(Gender::try_from("MALE").unwrap(), Gender::Male);
-
-        assert_eq!(Gender::try_from("f").unwrap(), Gender::Female);
-        assert_eq!(Gender::try_from("F").unwrap(), Gender::Female);
-        assert_eq!(Gender::try_from("female").unwrap(), Gender::Female);
-        assert_eq!(Gender::try_from("Female").unwrap(), Gender::Female);
-        assert_eq!(Gender::try_from("FEMALE").unwrap(), Gender::Female);
-
-        assert!(Gender::try_from("x").is_err());
-        assert!(Gender::try_from("").is_err());
-    }
-
-    #[test]
-    fn test_is_male() {
-        assert!(Gender::Male.is_male());
-        assert!(!Gender::Female.is_male());
-    }
-
-    #[test]
-    fn test_display() {
-        assert_eq!(format!("{}", Gender::Male), "Male");
-        assert_eq!(format!("{}", Gender::Female), "Female");
-    }
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = "genderFromString")]
+pub fn gender_from_string(s: &str) -> Result<Gender, wasm_bindgen::JsError> {
+    Gender::from_string(s).ok_or_else(|| wasm_bindgen::JsError::new(&format!("Unknown gender: {}", s)))
 }
